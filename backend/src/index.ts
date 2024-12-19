@@ -2,17 +2,21 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth";
-import cookieParserModule from "cookie-parser";
+import cookieParser from "cookie-parser";
+import { errorHandler } from "./middlewares/errorHandler";
 
 dotenv.config();
 
 const app = express();
 
 app.use(express.json());
-app.use(cookieParserModule());
+app.use(cookieParser());
 
 // routes
 app.use("/auth", authRoutes);
+
+// error handler middleware
+app.use(errorHandler);
 
 // Connect to db
 mongoose
@@ -28,6 +32,3 @@ mongoose
 app.listen(process.env.PORT, () => {
   console.log(`I'm listening in port 9090`);
 });
-function cookieParser(): any {
-  throw new Error("Function not implemented.");
-}

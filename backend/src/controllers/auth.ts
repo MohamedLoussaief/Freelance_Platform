@@ -1,7 +1,8 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import {
   loginService,
   refreshService,
+  resetUserPassword,
   sendEmailCode,
   signUpService,
   verifyUserCode,
@@ -10,7 +11,11 @@ import { createToken } from "../utils/createToken";
 import { Types } from "mongoose";
 import jwt, { VerifyErrors } from "jsonwebtoken";
 
-const loginUser = async (req: Request, res: Response): Promise<void> => {
+const loginUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   const { email, password } = req.body;
 
   try {
@@ -42,11 +47,15 @@ const loginUser = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({ token });
   } catch (error: any) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-const signUp = async (req: Request, res: Response): Promise<void> => {
+const signUp = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const { user, token } = await signUpService(req.body);
 
@@ -68,32 +77,7 @@ const signUp = async (req: Request, res: Response): Promise<void> => {
       .status(201)
       .json({ message: "User registered successfully", user, token });
   } catch (error: any) {
-    if (error.message === "This email is already in use") {
-      res.status(409).json({ message: error.message });
-      return;
-    }
-
-    if (error.name === "ValidationError") {
-      const errors = Object.fromEntries(
-        Object.entries(error.errors).map(([path, err]: [string, any]) => [
-          path,
-          err.message,
-        ])
-      );
-      res.status(400).json({ message: "Validation error", errors });
-      return;
-    }
-
-    if (error.message === "Password validation failed") {
-      res
-        .status(400)
-        .json({ message: "Validation error", errors: error.errors });
-      return;
-    }
-
-    res
-      .status(500)
-      .json({ message: "Internal Server Error", error: error.message });
+    next(error);
   }
 };
 
@@ -151,7 +135,8 @@ const emailCode = async (req: Request, res: Response) => {
   const { email } = req.body;
 
   if (!email) {
-    return res.status(400).json({ msg: "Email is required" });
+    res.status(400).json({ msg: "Email is required" });
+    return;
   }
 
   try {
@@ -165,7 +150,7 @@ const emailCode = async (req: Request, res: Response) => {
   }
 };
 
-export const verifyCode = async (req: Request, res: Response) => {
+const verifyCode = async (req: Request, res: Response, next: NextFunction) => {
   const { email, code } = req.body;
 
   try {
@@ -175,8 +160,32 @@ export const verifyCode = async (req: Request, res: Response) => {
 
     res.status(200).json({ msg: message });
   } catch (error: any) {
-    res.status(400).json({ msg: error.message || "Server error" });
+    next(error);
   }
 };
 
-export { loginUser, refresh, logout, signUp, emailCode };
+const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { email, newPassword } = req.body;
+
+  try {
+    const message = await resetUserPassword(email, newPassword);
+
+    res.status(200).json({ msg: message });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export {
+  loginUser,
+  refresh,
+  logout,
+  signUp,
+  emailCode,
+  verifyCode,
+  resetPassword,
+};

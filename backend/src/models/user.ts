@@ -1,5 +1,6 @@
 import { Schema, Document, model } from "mongoose";
 import bcrypt from "bcrypt";
+import CustomError from "../utils/CustomError";
 // UserType enum
 export enum UserType {
   Client = "Client",
@@ -119,7 +120,7 @@ userSchema.pre("save", async function (next) {
 
   for (const { test, message } of validations) {
     if (!test(password)) {
-      const validationError = new Error(message);
+      const validationError = new CustomError(message, 400);
       return next(validationError);
     }
   }

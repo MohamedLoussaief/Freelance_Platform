@@ -4,6 +4,7 @@ import { Types } from "mongoose";
 import { createToken } from "../utils/createToken";
 import { emailContent } from "../utils/emailContent";
 import transporter from "../utils/emailSender";
+import CustomError from "../utils/CustomError";
 
 interface SignUpData {
   userType: string;
@@ -19,13 +20,13 @@ export const loginService = async (email: string, password: string) => {
   const userExist = await User.findOne({ email });
 
   if (!userExist) {
-    throw Error("Incorrect email");
+    throw new CustomError("Incorrect email", 400);
   }
 
   const match = await bcrypt.compare(password, userExist.password);
 
   if (!match) {
-    throw Error("Incorrect password");
+    throw new CustomError("Incorrect password", 400);
   }
 
   const token = createToken(
@@ -55,7 +56,7 @@ export const signUpService = async (data: SignUpData) => {
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    throw new Error("This email is already in use");
+    throw new CustomError("This email is already in use", 409);
   }
 
   const newUser = await User.create({
@@ -141,32 +142,34 @@ export const verifyUserCode = async (
   action: "activateAccount" | "forgotPassword"
 ) => {
   if (!email) {
-    throw new Error("Please provide the email address");
+    throw new CustomError("Please provide the email address", 400);
   }
 
   if (!code) {
-    throw new Error("Please provide the code");
+    throw new CustomError("Please provide the code", 400);
   }
 
   const user = await User.findOne({ email });
 
   if (!user) {
-    throw new Error("User email not found");
+    throw new CustomError("User email not found", 400);
   }
 
   if (user.code !== code) {
-    throw new Error(
+    throw new CustomError(
       `Invalid ${
         action === "activateAccount" ? "activation" : "forgot password"
-      } code`
+      } code`,
+      400
     );
   }
 
   if (user.codeExpires && user.codeExpires < Date.now()) {
-    throw new Error(
+    throw new CustomError(
       `Expired ${
         action === "activateAccount" ? "activation" : "forgot password"
-      } code`
+      } code`,
+      400
     );
   }
 
@@ -182,4 +185,26 @@ export const verifyUserCode = async (
   return action === "activateAccount"
     ? "Account activated successfully"
     : "You can now reset your password";
+};
+
+export const resetUserPassword = async (email: string, newPassword: string) => {
+  if (!email) {
+    throw new CustomError("Email is required", 400);
+  }
+
+  if (!newPassword) {
+    throw new CustomError("Please provide a new password", 400);
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new CustomError("User with the specified email was not found", 404);
+  }
+
+  user.password = newPassword;
+
+  await user.save();
+
+  return { msg: "The password has been changed successfully" };
 };
