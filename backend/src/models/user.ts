@@ -1,14 +1,47 @@
 import { Schema, Document, model } from "mongoose";
 import bcrypt from "bcrypt";
 import CustomError from "../utils/CustomError";
+
 // UserType enum
 export enum UserType {
   Client = "Client",
   Freelance = "Freelancer",
 }
 
+export enum Proficiency {
+  Beginner = "Beginner",
+  Intermediate = "Intermediate",
+  Advanced = "Advanced",
+  Fluent = "Fluent",
+}
+
+export interface Experience {
+  id?: string;
+  jobTitle: string;
+  company: string;
+  currentlyWorking: boolean;
+  startDate: Date;
+  endDate?: Date;
+  description?: string;
+}
+
+export interface Education {
+  id?: string;
+  university: string;
+  degree: string;
+  field: string;
+  startYear: number;
+  endYear: number;
+}
+
+export interface Language {
+  id: string;
+  language: string;
+  proficiency: Proficiency;
+}
+
 // User Schema
-interface IUser extends Document {
+export interface IUser extends Document {
   userType: UserType;
   firstName: string;
   lastName: string;
@@ -16,11 +49,13 @@ interface IUser extends Document {
   email: string;
   password: string;
   profilPicture?: string;
+  jobTitle?: string;
   bio?: string;
   skills?: string[];
-  experience?: string;
-  education?: string;
-  languages?: string[];
+  experience?: Experience[];
+  education?: Education[];
+  languages?: Language[];
+  hourlyRate?: number;
   companyName?: string;
   sector?: string;
   paymentMethod?: string[];
@@ -77,11 +112,85 @@ const userSchema = new Schema<IUser>({
     required: [true, "Password is required"],
   },
   profilPicture: { type: String, default: null },
-  bio: { type: String, maxlength: 2000, default: null },
-  skills: { type: [String] },
-  experience: { type: String },
-  education: { type: String },
-  languages: { type: [String] },
+  jobTitle: { type: String },
+  bio: {
+    type: String,
+    minlength: [100, "Bio must be at least 100 characters long."],
+    maxlength: [2000, "Bio cannot exceed 2000 characters."],
+    default: null,
+  },
+  skills: {
+    type: [String],
+  },
+  experience: {
+    type: [
+      {
+        jobTitle: { type: String, required: [true, "Job title is required"] },
+        company: { type: String, required: [true, "Company name is required"] },
+        currentlyWorking: { type: Boolean, default: false },
+        startDate: { type: Date, required: [true, "Start date is required"] },
+        endDate: {
+          type: Date,
+          validate: {
+            validator: function (this: { startDate: Date }, value: Date) {
+              return !value || value > this.startDate;
+            },
+            message: "End date must be after the start date.",
+          },
+        },
+        description: { type: String, maxlength: 3998 },
+      },
+    ],
+  },
+  education: [
+    {
+      university: { type: String, required: [true, "University is required"] },
+      degree: { type: String, required: [true, "Degree is required"] },
+      field: { type: String, required: [true, "Field is required"] },
+      startYear: {
+        type: Number,
+        required: [true, "Start year is required"],
+        validate: {
+          validator: function (value: number) {
+            return value <= new Date().getFullYear();
+          },
+          message: "Start year must be a valid year.",
+        },
+      },
+      endYear: {
+        type: Number,
+        validate: {
+          validator: function (this: { startYear: number }, value: number) {
+            const currentYear = new Date().getFullYear();
+            const maxFutureYear = currentYear + 7;
+            return value >= this.startYear && value <= maxFutureYear;
+          },
+          message: (props) =>
+            `End year (${props.value}) must be after the start year and within 7 years of the current year.`,
+        },
+      },
+    },
+  ],
+  languages: [
+    {
+      language: { type: String, required: [true, "Language is required"] },
+      proficiency: {
+        type: String,
+        enum: ["Beginner", "Intermediate", "Advanced", "Fluent"],
+        required: [true, "Proficiency level is required"],
+      },
+    },
+  ],
+  hourlyRate: {
+    type: Number,
+    min: [0, "Hourly rate must be a positive number."],
+    validate: {
+      validator: function (value: number) {
+        return Number.isInteger(value);
+      },
+      message: "Hourly rate must be an integer value.",
+    },
+  },
   companyName: { type: String },
   sector: { type: String },
   paymentMethod: { type: [String] },
@@ -92,6 +201,10 @@ const userSchema = new Schema<IUser>({
 
 userSchema.pre("save", async function (next) {
   const user = this as IUser;
+
+  if (!user.isModified("password")) {
+    return next();
+  }
 
   const password = user.password;
 

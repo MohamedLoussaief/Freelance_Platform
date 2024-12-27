@@ -2,7 +2,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "../models/user";
 import { Request, Response, NextFunction } from "express";
 
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   user?: any;
 }
 
@@ -15,7 +15,8 @@ export const requireAuth = async (
   const { authorization } = req.headers;
 
   if (!authorization) {
-    return res.status(401).json({ error: "Authorization token is required" });
+    res.status(401).json({ error: "Authorization token is required" });
+    return;
   }
 
   const token = authorization.split(" ")[1];

@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth";
+import userRoutes from "./routes/user";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler";
 
@@ -14,6 +15,7 @@ app.use(cookieParser());
 
 // routes
 app.use("/auth", authRoutes);
+app.use("/profile", userRoutes);
 
 // error handler middleware
 app.use(errorHandler);
