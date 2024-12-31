@@ -4,8 +4,18 @@ import {
   IUser,
   Language,
   Proficiency,
+  Service,
 } from "../models/user";
 import CustomError from "../utils/CustomError";
+
+const addUserService = async (service: Service, user: IUser) => {
+  if (!service) {
+    throw new CustomError("Please select a field of work", 400);
+  }
+
+  user.service = service;
+  await user.save();
+};
 
 const addUserSkills = async (skills: string[], user: IUser) => {
   if (
@@ -181,4 +191,5 @@ export {
   updateUserExperience,
   updateUserEducation,
   updateUserLanguage,
+  addUserService,
 };

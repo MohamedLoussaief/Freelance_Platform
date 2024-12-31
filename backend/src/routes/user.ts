@@ -21,26 +21,26 @@ const upload = uploadFile("images");
 
 router.use(requireAuth);
 
-router.put("/skills", addSkills);
+router.put("/add-skills", addSkills);
 
-router.post("/experience", addExperience);
+router.post("/add-experience", addExperience);
 
-router.post("/education", addEducation);
+router.post("/add-education", addEducation);
 
-router.post("/languages", addLanguages);
+router.post("/add-languages", addLanguages);
 
 router.put("/bio", addBio);
 
-router.put("/jobTitle", addJobTitle);
+router.put("/job-title", addJobTitle);
 
-router.put("/addHourlyRate", addHourlyRate);
+router.put("/hourly-rate", addHourlyRate);
 
-router.put("/profilePicture", upload.single("profilePicture"), addProfilePic);
+router.put("/profile-picture", upload.single("profilePicture"), addProfilePic);
 
-router.put("/updateExperience/:id", updateExperience);
+router.put("/update-experience/:id", updateExperience);
 
-router.put("/updateEducation/:id", updateEducation);
+router.put("/update-education/:id", updateEducation);
 
-router.put("/updateLanguage/:id", updateLanguage);
+router.put("/update-language/:id", updateLanguage);
 
 export default router;

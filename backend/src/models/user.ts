@@ -8,6 +8,16 @@ export enum UserType {
   Freelance = "Freelancer",
 }
 
+export enum Service {
+  WebMobileSoftwareDev = "Web, Mobile & Software Development",
+  ITNetworking = "IT & Networking",
+  DataScienceAnalytics = "Data Science & Analytics",
+  DesignCreative = "Design & Creative",
+  SalesMarketing = "Sales & Marketing",
+  Translation = "Translation",
+  Writing = "Writing",
+}
+
 export enum Proficiency {
   Beginner = "Beginner",
   Intermediate = "Intermediate",
@@ -49,6 +59,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   profilPicture?: string;
+  service?: Service;
   jobTitle?: string;
   bio?: string;
   skills?: string[];
@@ -111,7 +122,8 @@ const userSchema = new Schema<IUser>({
     type: String,
     required: [true, "Password is required"],
   },
-  profilPicture: { type: String, default: null },
+  profilPicture: { type: String },
+  service: { type: String },
   jobTitle: { type: String },
   bio: {
     type: String,

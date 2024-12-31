@@ -8,11 +8,29 @@ import {
   addUserJobTitle,
   addUserLanguages,
   addUserProfilePic,
+  addUserService,
   addUserSkills,
   updateUserEducation,
   updateUserExperience,
   updateUserLanguage,
 } from "../services/user";
+
+const addService = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = req.user;
+  const { service } = req.body;
+
+  try {
+    await addUserService(service, user);
+    res.status(200).json({ msg: "Service added successfully" });
+    return;
+  } catch (error: any) {
+    next(error);
+  }
+};
 
 const addSkills = async (
   req: AuthenticatedRequest,
@@ -25,6 +43,7 @@ const addSkills = async (
   try {
     await addUserSkills(skills, user);
     res.status(200).json({ msg: "Skills added successfully" });
+    return;
   } catch (error: any) {
     next(error);
   }
@@ -219,6 +238,7 @@ const updateLanguage = async (
 };
 
 export {
+  addService,
   addSkills,
   addExperience,
   addEducation,

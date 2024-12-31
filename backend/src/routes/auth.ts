@@ -19,14 +19,14 @@ router.get("/refresh", refresh);
 
 router.get("/logout", logout);
 
-router.post("/emailActivation", emailCode);
+router.post("/email-activation", emailCode);
 
-router.post("/emailForgetPassword", emailCode);
+router.post("/email-forget-password", emailCode);
 
-router.post("/activateAccount", verifyCode);
+router.post("/activate-account", verifyCode);
 
-router.post("/forgetPassword", verifyCode);
+router.post("/forget-password", verifyCode);
 
-router.post("/resetPassword", resetPassword);
+router.post("/reset-password", resetPassword);
 
 export default router;
