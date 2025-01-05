@@ -7,7 +7,10 @@ import {
   addJobTitle,
   addLanguages,
   addProfilePic,
+  addService,
   addSkills,
+  deleteLanguage,
+  getUserData,
   updateEducation,
   updateExperience,
   updateLanguage,
@@ -37,10 +40,16 @@ router.put("/hourly-rate", addHourlyRate);
 
 router.put("/profile-picture", upload.single("profilePicture"), addProfilePic);
 
+router.put("/work-field", addService);
+
 router.put("/update-experience/:id", updateExperience);
 
 router.put("/update-education/:id", updateEducation);
 
 router.put("/update-language/:id", updateLanguage);
+
+router.get("/user-data", getUserData);
+
+router.delete("/delete-language/:id", deleteLanguage);
 
 export default router;

@@ -84,7 +84,6 @@ const signUp = async (
 // refreshing the token
 const refresh = async (req: Request, res: Response): Promise<void> => {
   const cookies = req.cookies;
-
   if (!cookies?.jwt) {
     res.status(401).json({ message: "Unauthorized" });
     return;

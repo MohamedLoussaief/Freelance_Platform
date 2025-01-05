@@ -10,6 +10,7 @@ import {
   addUserProfilePic,
   addUserService,
   addUserSkills,
+  deleteUserLanguage,
   updateUserEducation,
   updateUserExperience,
   updateUserLanguage,
@@ -91,7 +92,7 @@ const addLanguages = async (
   const { languages } = req.body;
   try {
     await addUserLanguages(languages, user);
-    res.status(200).json({ msg: "Language added successfully" });
+    res.status(200).json({ msg: "Languages added successfully" });
     return;
   } catch (error: any) {
     next(error);
@@ -237,6 +238,38 @@ const updateLanguage = async (
   }
 };
 
+const getUserData = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = req.user;
+
+  try {
+    res.status(200).json({ user });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+const deleteLanguage = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = req.user;
+
+  try {
+    const { id } = req.params;
+    const user = req.user;
+    await deleteUserLanguage(id, user);
+    res.status(200).json({ msg: "Language deleted successfully" });
+    return;
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export {
   addService,
   addSkills,
@@ -250,4 +283,6 @@ export {
   updateExperience,
   updateEducation,
   updateLanguage,
+  getUserData,
+  deleteLanguage,
 };

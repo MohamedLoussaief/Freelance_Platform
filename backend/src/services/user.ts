@@ -70,10 +70,10 @@ const addUserEducation = async (education: Education, user: IUser) => {
   await user.save();
 };
 
-const addUserLanguages = async (languages: Language, user: IUser) => {
+const addUserLanguages = async (languages: Language[], user: IUser) => {
   const currentLanguage = user.languages || [];
 
-  const addLanguage = [...currentLanguage, languages];
+  const addLanguage = [...currentLanguage, ...languages];
 
   user.languages = addLanguage;
 
@@ -179,6 +179,26 @@ const updateUserLanguage = async (
   await user.save();
 };
 
+const deleteUserLanguage = async (languageId: string, user: IUser) => {
+  const languageIndex = user.languages?.findIndex(
+    (lan) => lan.id === languageId
+  );
+
+  if (languageIndex === -1) {
+    throw new CustomError("Language not found", 400);
+  }
+
+  try {
+    await user.updateOne({
+      $pull: {
+        languages: { _id: languageId },
+      },
+    });
+  } catch (error) {
+    throw new CustomError("Failed to delete language", 500);
+  }
+};
+
 export {
   addUserSkills,
   addUserExperience,
@@ -192,4 +212,5 @@ export {
   updateUserEducation,
   updateUserLanguage,
   addUserService,
+  deleteUserLanguage,
 };

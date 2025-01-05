@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
+  CircularProgress,
   InputAdornment,
   MenuItem,
   TextField,
@@ -13,7 +14,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { getNames } from "country-list";
-
+import { signup } from "../../services/userService";
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -39,13 +41,17 @@ const signupSchema = z.object({
 type SignupFormData = z.infer<typeof signupSchema>;
 
 
-const SignupForm: React.FC<{selectedRole:UserType|undefined}> = ({selectedRole}) => {
-  
+const SignupForm: React.FC<{selectedRole:UserType|undefined, 
+  setSuccess:(s:boolean)=>void}> = ({selectedRole, setSuccess}) => {
+
+  const navigate = useNavigate();
+
   const {
     handleSubmit,
     control,
     watch,
     setValue,
+    setError,
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -61,6 +67,7 @@ const SignupForm: React.FC<{selectedRole:UserType|undefined}> = ({selectedRole})
     },
   });
 
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const countries = getNames(); 
 
@@ -71,8 +78,25 @@ const SignupForm: React.FC<{selectedRole:UserType|undefined}> = ({selectedRole})
     setValue("showPassword", !showPassword);
   };
 
-  const onSubmit = (data: SignupFormData) => {
-    console.log("Form Submitted:", data);
+  const onSubmit = async(data: SignupFormData) => {
+    //console.log("Form Submitted:", data);
+    setIsLoading(true)
+    try{
+     const res = await signup(data)
+  if(res){
+    setSuccess(true)
+     }
+
+    }catch(error:any){
+      if(error.response?.status === 409){
+        setError("email", {
+          type: "server",
+          message: error.response.data.message,
+        })
+      }
+    }finally{
+      setIsLoading(false)
+    }
   };
 
   return (
@@ -227,10 +251,11 @@ const SignupForm: React.FC<{selectedRole:UserType|undefined}> = ({selectedRole})
           )}
         />
 
-        <Button
+     <Button
           type="submit"
           variant="contained"
           fullWidth
+          disabled={isLoading} // Disable the button while loading
           sx={{
             backgroundColor: "#108a00",
             color: "#fff",
@@ -240,7 +265,11 @@ const SignupForm: React.FC<{selectedRole:UserType|undefined}> = ({selectedRole})
             mb: 2,
           }}
         >
-          Create my account
+          {isLoading ? (
+            <CircularProgress size={24} sx={{ color: "white" }} /> // Show loading spinner
+          ) : (
+            "Create my account"
+          )}
         </Button>
 
         <Typography textAlign="center" variant="body2">
@@ -252,6 +281,7 @@ const SignupForm: React.FC<{selectedRole:UserType|undefined}> = ({selectedRole})
               textDecoration: "underline",
               cursor: "pointer",
             }}
+            onClick={() => navigate("/login")}
           >
             Log In
           </Typography>
