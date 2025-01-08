@@ -2,14 +2,17 @@ import React, { useEffect } from "react";
 import { Box, Typography, Avatar } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useNavigate } from "react-router-dom";
+import useDecodedToken from "../../hooks/useDecodedToken";
 
 const AccountCreated:React.FC = () => {
 
 const navigate = useNavigate();
+const decodedToken = useDecodedToken()
+const userType = decodedToken?.userType;
 
 useEffect(() => {
     const timer = setTimeout(() => {
-      navigate("/verify-email"); // Replace with your actual verify email route
+      userType==="Freelancer"?navigate("/create-profile/field-work"):navigate("/") // Replace with your actual verify email route
     }, 30000); // 30 seconds
 
     return () => clearTimeout(timer); // Cleanup timer on component unmount

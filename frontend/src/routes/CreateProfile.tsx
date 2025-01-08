@@ -6,7 +6,7 @@ import JobTitle from "../pages/profileCreation/JobTitle";
 import Experience from "../pages/profileCreation/Experience";
 import Education from "../pages/profileCreation/Education";
 import Language from "../pages/profileCreation/Language";
-import Bio from "../pages/profileCreation/bio";
+import Bio from "../pages/profileCreation/Bio";
 import HourlyRate from "../pages/profileCreation/HourlyRate";
 
 

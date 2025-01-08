@@ -1,96 +1,85 @@
-import {createContext, useReducer, Dispatch, useEffect, useContext}  from 'react'
+// AuthContext.tsx
+import { createContext, useReducer, Dispatch, useEffect, useContext } from 'react';
 import { useRefreshToken } from '../hooks/useRefreshToken';
 
-
-
-interface AuthState{
-user:null | object | undefined 
+interface AuthState {
+  user: null | object | undefined;
+  loading: boolean;
 }
 
-interface AuthAction{
-type:string
-payload?:{token:string, isLoading:boolean}
+interface AuthAction {
+  type: string;
+  payload?: { token: string | null };
 }
 
 interface AuthContextType extends AuthState {
-    dispatch: Dispatch<AuthAction>;
+  dispatch: Dispatch<AuthAction>;
 }
 
-export const AuthContext = createContext<AuthContextType>({user:null, dispatch: () => {}});
+export const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: true,
+  dispatch: () => {},
+});
 
+export const authReducer = (state: AuthState, action: AuthAction): AuthState => {
+  switch (action.type) {
+    case 'LOGIN':
+      return { user: action.payload?.token ? { token: action.payload.token } : null, loading: false };
+    case 'LOGOUT':
+      return { user: null, loading: false };
+    default:
+      return state;
+  }
+};
 
-export const authReducer = (state:AuthState, action:AuthAction):AuthState=>{
+export const AuthContextProvider = ({ children }: { children: React.ReactNode }) => {
+  const [state, dispatch] = useReducer(authReducer, { user: null, loading: true });
+  const { refreshToken } = useRefreshToken();
 
-switch (action.type){
+  useEffect(() => {
+    const auth = async () => {
+      try {
+        // Attempt to refresh the token at initial render
+        const refreshedToken = await refreshToken();
 
-case 'LOGIN':
-    return {user: action.payload}
+        if (refreshedToken) {
+          dispatch({ type: 'LOGIN', payload: { token: refreshedToken } });
+        } else {
+          dispatch({ type: 'LOGOUT' });
+        }
+      } catch (error) {
+        console.error('Authentication error:', error);
+        dispatch({ type: 'LOGOUT' });
+      }
+    };
 
-case 'LOGOUT':
-    return {user:null}
-default:
-    return state
+    auth();
 
-}
+    // Set up interval to refresh token every 15 minutes
+    const refreshInterval = setInterval(async () => {
+      const refreshedToken = await refreshToken();
+      if (refreshedToken) {
+        dispatch({ type: 'LOGIN', payload: { token: refreshedToken } });
+      }
+    }, 15 * 60 * 1000);
 
-}
+    return () => clearInterval(refreshInterval);
+  }, []);
 
-export const AuthContextProvider = ({children}:{children:React.ReactNode})=>{
+  return (
+    <AuthContext.Provider value={{ ...state, dispatch }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
-const [state, dispatch] = useReducer(authReducer, {user:null})
-const { token, isLoading, refreshToken } = useRefreshToken()
+export const useAuthContext = () => {
+  const context = useContext(AuthContext);
 
+  if (!context) {
+    throw Error('useAuthContext must be used inside an AuthContextProvider');
+  }
 
-
-
-// checking if user still logged in
-useEffect(()=>{
-
-// refresh token at an initial render
-refreshToken()    
-
-// refreshing token every 15 minutes
-const refresh = setInterval(()=>{ refreshToken() }, 15*60*1000)
-
-
-if(token){ 
-
-dispatch({type:'LOGIN', payload:{token:token, isLoading:isLoading}})
-
-}
-
-return ()=> clearInterval(refresh) 
-
-}, [token]);
-
-
-//console.log('AuthContext state: ', state)
-
-return (
-    
-<AuthContext.Provider value={{ ...state, dispatch }}>
-{children}
-</AuthContext.Provider>
-
-)
-
-}
-
-
-export const useAuthContext = ()=>{
-
-const context = useContext(AuthContext);
-
-if(!context){
-
-throw Error('useAuthContext must be used inside an AuthContextProvider')
-
-}
-
-return context;
-
-}
-
-
-
-
+  return context;
+};

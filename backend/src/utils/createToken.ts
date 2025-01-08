@@ -1,4 +1,4 @@
-import jwt, { JwtPayload, VerifyErrors } from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { Types } from "mongoose";
 import { UserType } from "../models/user";
 

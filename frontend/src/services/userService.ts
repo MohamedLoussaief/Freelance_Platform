@@ -20,11 +20,42 @@ const signup = async (userData: User) => {
   }
 };
 
+const login = async (data: any) => {
+  try {
+    const response = await axios.post(
+      `${baseURL}/auth/login`,
+      { ...data },
+      {
+        withCredentials: true, // Allow cookies to be sent
+      }
+    );
+
+    if (response.status === 200) {
+      return response.data.token;
+    }
+  } catch (error: any) {
+    throw error;
+  }
+};
+
 const getUserData = async () => {
   try {
     const response = await get("/profile/user-data");
 
     return response.user;
+  } catch (error: any) {
+    throw error;
+  }
+};
+
+const logout = async () => {
+  try {
+    const response = await axios.get(`${baseURL}/auth/logout`, {
+      withCredentials: true,
+    });
+    if (response) {
+      return true;
+    }
   } catch (error: any) {
     throw error;
   }
@@ -40,4 +71,4 @@ const fieldOfWork = async (service: string) => {
   }
 };
 
-export { signup, fieldOfWork, getUserData };
+export { signup, fieldOfWork, getUserData, logout, login };

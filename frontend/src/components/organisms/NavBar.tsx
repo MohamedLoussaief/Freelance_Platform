@@ -1,17 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SearchBarFilter from '../molecules/SearchBarFilter';
 import { UserType } from '../../types/models/User';
-import { useLocation } from 'react-router-dom'; 
+import { useLocation, useNavigate } from 'react-router-dom'; 
 import { useAuthContext } from '../../context/AuthContext';
+import { IconButton, Menu, MenuItem } from '@mui/material';
+import { logout } from '../../services/userService';
+
+
 
 const NavBar: React.FC<{selectedRole?:UserType|undefined, setSelectedRole?:(role:UserType)=>void 
   confirmRole?:boolean, success?:boolean}> = ({selectedRole, setSelectedRole, confirmRole, success}) => {
   
+  const navigate = useNavigate();
   const location = useLocation();
   const isAuthRoute = location.pathname === '/signup' || location.pathname === '/login' || 
   location.pathname==='/create-profile/field-work'|| location.pathname==='/create-profile/skills' || 
@@ -19,10 +25,32 @@ const NavBar: React.FC<{selectedRole?:UserType|undefined, setSelectedRole?:(role
   location.pathname==='/create-profile/education' || location.pathname==='/create-profile/language' ||
   location.pathname==='/create-profile/bio' || location.pathname==='/create-profile/hourly-rate'
 
+  const {user, loading, dispatch} = useAuthContext() 
 
-  const {user} = useAuthContext() 
 
-  //const token= (user as { token: string} )?.token
+  // Menu state for profile icon
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const openMenu = Boolean(anchorEl);
+
+  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = async() => {
+    try{
+      const res = await logout();
+      if(res){
+        dispatch({ type: "LOGOUT" });
+      }
+    }catch(error){console.error(error)}
+    handleCloseMenu(); 
+  };
+
+// console.log(loading)
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -35,14 +63,20 @@ const NavBar: React.FC<{selectedRole?:UserType|undefined, setSelectedRole?:(role
             fontFamily: "'Roboto Slab', sans-serif", fontWeight:"bold"}}>
             FreelanceWave
           </Typography>
-{ !isAuthRoute&&<><SearchBarFilter/>
+{loading?(<>loading...</>): (!isAuthRoute&&<><SearchBarFilter/>
 
-{ !user && <><Button color="inherit" sx={{ textTransform: "none", marginLeft:"10px"}}>Login</Button>
+{ !user ? (<><Button color="inherit" sx={{ textTransform: "none", marginLeft:"10px"}} onClick={()=>{navigate("/login")}} >Login</Button>
           <Button color="inherit"   sx={{textTransform: "none", backgroundColor: "#108a00", 
             "&:hover": {backgroundColor: "#0c6a00"}, 
             color: "white",
-            marginLeft:"10px"}}>Sign up</Button></>}
-            </>}
+            marginLeft:"10px"}} onClick={()=>{navigate("/signup")}}>Sign up</Button></>) : (
+              <IconButton color="inherit" onClick={handleProfileClick} sx={{ marginLeft: "10px" }}>
+                <AccountCircleIcon />
+              </IconButton>
+            )}
+            </>
+)
+            }
 
 {(confirmRole&&!success)&&<>                    
 <Typography variant="body1">
@@ -72,6 +106,21 @@ Apply as
 
         </Toolbar>
       </AppBar>
+
+{/* Profile Menu */}
+<Menu
+  anchorEl={anchorEl}
+  open={openMenu}
+  onClose={handleCloseMenu}
+  MenuListProps={{
+    'aria-labelledby': 'basic-button',
+      }}
+>
+    <MenuItem onClick={handleCloseMenu}>Account</MenuItem>
+    <MenuItem onClick={handleLogout}>Logout</MenuItem>
+</Menu>
+
+
     </Box>
   );
 };

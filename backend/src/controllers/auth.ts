@@ -46,6 +46,7 @@ const loginUser = async (
     const token = login.token;
 
     res.status(200).json({ token });
+    return;
   } catch (error: any) {
     next(error);
   }

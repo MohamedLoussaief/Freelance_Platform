@@ -1,15 +1,15 @@
-import { useState } from "react";
 import { fetchToken } from "../api/token";
 
 export const useRefreshToken = () => {
-  const [token, setToken] = useState<string>();
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  const refreshToken = async () => {
-    const response = await fetchToken();
-    setToken(response);
-    setIsLoading(false);
+  const refreshToken = async (): Promise<string | null> => {
+    try {
+      const response = await fetchToken();
+      return response || null;
+    } catch (error) {
+      console.error("Failed to refresh token:", error);
+      return null;
+    }
   };
 
-  return { token, isLoading, refreshToken };
+  return { refreshToken };
 };

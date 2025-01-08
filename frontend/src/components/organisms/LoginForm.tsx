@@ -6,8 +6,12 @@ import {
   TextField,
   Typography,
   InputAdornment,
+  FormHelperText,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { login } from "../../services/userService";
+import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../../context/AuthContext";
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +19,11 @@ const LoginForm = () => {
     password: "",
     showPassword: false,
   });
+  const { dispatch, user } = useAuthContext();
+  const [error, setError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const navigate = useNavigate();
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -25,9 +34,33 @@ const LoginForm = () => {
     setFormData({ ...formData, showPassword: !formData.showPassword });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login Data:", formData);
+    setIsLoading(true);
+  
+    try {
+      if (formData.email.trim() === "" || formData.password.trim() === "") {
+        setError("All fields are required.");
+        setIsLoading(false); 
+        return;
+      }
+  
+      
+      const { showPassword, ...loginData } = formData;
+  
+      const token = await login(loginData);
+      if (token) {
+        console.log(token)
+        dispatch({ type: "LOGIN", payload: {token:token} });
+        console.log(user)
+        navigate("/");
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message );
+      console.error(error)
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -53,6 +86,7 @@ const LoginForm = () => {
           name="email"
           value={formData.email}
           onChange={handleChange}
+          error={!!error}
           fullWidth
           sx={{ mb: 2 }}
         />
@@ -67,6 +101,7 @@ const LoginForm = () => {
           type={formData.showPassword ? "text" : "password"}
           value={formData.password}
           onChange={handleChange}
+          error={!!error}
           fullWidth
           sx={{ mb: 2 }}
           slotProps={{
@@ -106,6 +141,8 @@ const LoginForm = () => {
         >
           Log In
         </Button>
+      {/* Error Message */}
+      {error && <FormHelperText sx={{color:"red", textAlign:"center", fontSize:"15px"}}>{error}</FormHelperText>}
         <Typography textAlign="center" variant="body2">
           Don't have an account?{" "}
           <Typography
