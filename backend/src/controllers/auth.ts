@@ -110,7 +110,7 @@ const refresh = async (req: Request, res: Response): Promise<void> => {
 
       const token = createToken(
         { _id: foundUser._id as Types.ObjectId, userType: foundUser.userType },
-        "15m",
+        "1h",
         process.env.ACCESS_TOKEN_SECRET as string
       );
 

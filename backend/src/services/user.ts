@@ -7,6 +7,36 @@ import {
   Service,
 } from "../models/user";
 import CustomError from "../utils/CustomError";
+import User from "../models/user";
+
+export const updateUserAccount = async (
+  lastName: string,
+  firstName: string,
+  email: string,
+  country: string,
+  sector: string,
+  companyName: string,
+  user: IUser
+) => {
+  if (!lastName || !firstName || !email || !country) {
+    throw new CustomError("All required fields must be provided", 400);
+  }
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new CustomError("This email is already in use", 409);
+  }
+
+  user.lastName = lastName;
+  user.firstName = firstName;
+  user.email = email;
+  user.country = country;
+
+  if (sector) user.sector = sector;
+  if (companyName) user.companyName = companyName;
+
+  await user.save();
+};
 
 const addUserService = async (service: Service, user: IUser) => {
   if (!service) {
@@ -199,6 +229,54 @@ const deleteUserLanguage = async (languageId: string, user: IUser) => {
   }
 };
 
+const deleteUserSkill = async (skill: string, user: IUser) => {
+  if (!user.skills || user.skills.length === 0) {
+    throw new CustomError("No skills found for this user", 400);
+  }
+
+  const skillIndex = user.skills.indexOf(skill);
+  if (skillIndex === -1) {
+    throw new CustomError("Skill not found", 404);
+  }
+
+  user.skills.splice(skillIndex, 1);
+
+  await user.save();
+};
+
+const deleteUserEducation = async (educationId: string, user: IUser) => {
+  if (!user.education || user.education.length === 0) {
+    throw new CustomError("No education entries found for this user", 400);
+  }
+
+  const educationIndex = user.education.findIndex(
+    (edu) => edu.id?.toString() === educationId
+  );
+  if (educationIndex === -1) {
+    throw new CustomError("Education entry not found", 404);
+  }
+
+  user.education.splice(educationIndex, 1);
+  await user.save();
+};
+
+const deleteUserExperience = async (experienceId: string, user: IUser) => {
+  if (!user.experience || user.experience.length === 0) {
+    throw new CustomError("No experience entries found for this user", 400);
+  }
+
+  const experienceIndex = user.experience.findIndex(
+    (exp) => exp.id?.toString() === experienceId
+  );
+
+  if (experienceIndex === -1) {
+    throw new CustomError("Experience entry not found", 404);
+  }
+
+  user.experience.splice(experienceIndex, 1);
+  await user.save();
+};
+
 export {
   addUserSkills,
   addUserExperience,
@@ -213,4 +291,7 @@ export {
   updateUserLanguage,
   addUserService,
   deleteUserLanguage,
+  deleteUserSkill,
+  deleteUserEducation,
+  deleteUserExperience,
 };

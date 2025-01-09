@@ -9,8 +9,12 @@ import {
   addProfilePic,
   addService,
   addSkills,
+  deleteEducation,
+  deleteExperience,
   deleteLanguage,
+  deleteSkill,
   getUserData,
+  updateAccountInfo,
   updateEducation,
   updateExperience,
   updateLanguage,
@@ -51,5 +55,13 @@ router.put("/update-language/:id", updateLanguage);
 router.get("/user-data", getUserData);
 
 router.delete("/delete-language/:id", deleteLanguage);
+
+router.delete("/delete-skills/:skill", deleteSkill);
+
+router.delete("/delete-education/:id", deleteEducation);
+
+router.delete("/delete-experience/:id", deleteExperience);
+
+router.put("/update-account-info", updateAccountInfo);
 
 export default router;

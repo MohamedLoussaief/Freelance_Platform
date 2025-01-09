@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/user";
+import portfolioRoutes from "./routes/portfolio";
+import projectRoutes from "./routes/project";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler";
 import cors from "cors";
@@ -19,6 +21,8 @@ app.use(cors({ origin: process.env.CLIENT, credentials: true }));
 // routes
 app.use("/auth", authRoutes);
 app.use("/profile", userRoutes);
+app.use("/portfolio", portfolioRoutes);
+app.use("/project", projectRoutes);
 
 // error handler middleware
 app.use(errorHandler);

@@ -1,10 +1,11 @@
-import { Schema, Document, model } from "mongoose";
+import mongoose, { Schema, Document, model, Types } from "mongoose";
 import validator from "validator";
 
-interface IPortfolio extends Document {
+export interface IPortfolio extends Document {
   title: string;
   description: string;
   mediaUrl: string;
+  user: Types.ObjectId;
 }
 
 const portfolioSchema = new Schema<IPortfolio>({
@@ -25,6 +26,11 @@ const portfolioSchema = new Schema<IPortfolio>({
       validator: (value) => validator.isURL(value),
       message: "Please enter a valid URL",
     },
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
 });
 

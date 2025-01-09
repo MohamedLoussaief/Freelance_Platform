@@ -10,11 +10,41 @@ import {
   addUserProfilePic,
   addUserService,
   addUserSkills,
+  deleteUserEducation,
+  deleteUserExperience,
   deleteUserLanguage,
+  deleteUserSkill,
+  updateUserAccount,
   updateUserEducation,
   updateUserExperience,
   updateUserLanguage,
 } from "../services/user";
+
+// update lastName, firstName, email, country, sector, companyName
+const updateAccountInfo = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = req.user;
+  const { lastName, firstName, email, country, sector, companyName } = req.body;
+
+  try {
+    await updateUserAccount(
+      lastName,
+      firstName,
+      email,
+      country,
+      sector,
+      companyName,
+      user
+    );
+    res.status(200).json({ msg: "Account information updated successfully" });
+    return;
+  } catch (error: any) {
+    next(error);
+  }
+};
 
 const addService = async (
   req: AuthenticatedRequest,
@@ -270,6 +300,57 @@ const deleteLanguage = async (
   }
 };
 
+const deleteSkill = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = req.user;
+  const { skill } = req.params;
+
+  try {
+    await deleteUserSkill(skill, user);
+    res.status(200).json({ msg: "Skill deleted successfully" });
+    return;
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+const deleteEducation = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = req.user;
+  const { id } = req.params;
+
+  try {
+    await deleteUserEducation(id, user);
+    res.status(200).json({ msg: "Education entry deleted successfully" });
+    return;
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+const deleteExperience = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = req.user;
+  const { id } = req.params;
+
+  try {
+    await deleteUserExperience(id, user);
+    res.status(200).json({ msg: "Experience entry deleted successfully" });
+    return;
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export {
   addService,
   addSkills,
@@ -285,4 +366,8 @@ export {
   updateLanguage,
   getUserData,
   deleteLanguage,
+  deleteSkill,
+  deleteEducation,
+  deleteExperience,
+  updateAccountInfo,
 };

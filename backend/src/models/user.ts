@@ -108,7 +108,7 @@ const userSchema = new Schema<IUser>({
   email: {
     type: String,
     required: [true, "Email address is required"],
-    unique: true,
+    unique: [true, "This email is already in use"],
     trim: true,
     lowercase: true,
     validate: {
