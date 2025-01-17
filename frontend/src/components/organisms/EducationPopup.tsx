@@ -21,20 +21,24 @@ const educationSchema = z
     degree: z.string().min(1, "Degree is required"),
     field: z.string().min(1, "Field of study is required"),
     startYear: z
-      .number({
-        required_error: "Start year is required",
-        invalid_type_error: "Start year must be a valid number",
-      })
-      .min(1900, "Start year must be greater than 1900")
-      .max(new Date().getFullYear(), "Start year cannot be in the future"),
+      .string()
+      .min(1, "Start year is required")
+      .refine((val) => !isNaN(Number(val)), "Start year must be a valid number")
+      .refine(
+        (val) => Number(val) >= 1900,
+        "Start year must be greater than 1900"
+      )
+      .refine(
+        (val) => Number(val) <= new Date().getFullYear(),
+        "Start year cannot be in the future"
+      ),
     endYear: z
-      .number({
-        invalid_type_error: "End year must be a valid number",
-      })
-      .optional(),
+      .string()
+      .optional()
+      .refine((val) => !val || !isNaN(Number(val)), "End year must be a valid number"),
   })
   .superRefine((data, ctx) => {
-    if (data.endYear && data.endYear < data.startYear) {
+    if (data.endYear && Number(data.endYear) < Number(data.startYear)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["endYear"],
@@ -48,9 +52,10 @@ type EducationFormData = z.infer<typeof educationSchema>;
 interface EducationPopupProps {
   isOpen: boolean;
   onClose: () => void;
+  onSave: () => void;
 }
 
-const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose }) => {
+const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose, onSave }) => {
   const {
     register,
     handleSubmit,
@@ -63,14 +68,14 @@ const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose }) => {
       university: "",
       degree: "",
       field: "",
-      startYear: undefined,
-      endYear: undefined,
+      startYear: "",
+      endYear: "",
     },
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>();
   const startYear = watch("startYear");
+  const endYear = watch("endYear");
 
   useEffect(() => {
     if (!isOpen) {
@@ -80,17 +85,12 @@ const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose }) => {
 
   const onSubmit = async (data: EducationFormData) => {
     setIsLoading(true);
-    try {
-  const addEducation = await post("/profile/add-education", {education:data}) 
-  if(addEducation){
-      return true;
+    const addEducation = await post("/profile/add-education", {education:data}) 
+    if(addEducation){
+      onSave();
     }
-    } catch (error:any) {
-      setError(error.message)
-    } finally {
-      setIsLoading(false);
-      onClose();
-    }
+    setIsLoading(false);
+    onClose();
   };
 
   return (
@@ -122,25 +122,26 @@ const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose }) => {
           helperText={errors.field?.message}
         />
         <TextField
-          {...register("startYear", { valueAsNumber: true })}
+          {...register("startYear")}
           label="Start Year"
           type="number"
           fullWidth
           margin="dense"
           error={!!errors.startYear}
           helperText={errors.startYear?.message}
+          value={startYear || ""}
         />
         <TextField
-          {...register("endYear", { valueAsNumber: true })}
+          {...register("endYear")}
           label="End Year (or expected year)"
           type="number"
           fullWidth
           margin="dense"
           error={!!errors.endYear}
           helperText={errors.endYear?.message}
+          value={endYear || ""}
         />
-       {/* Error Message */}
-       {error && <FormHelperText>{error}</FormHelperText>}
+
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="secondary">

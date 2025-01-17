@@ -22,34 +22,57 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const validator_1 = __importDefault(require("validator"));
-const portfolioSchema = new mongoose_1.Schema({
+var Status;
+(function (Status) {
+    Status["OPEN"] = "OPEN";
+    Status["IN_PROGRESS"] = "IN PROGRESS";
+    Status["COMPLETED"] = "COMPLETED";
+})(Status || (Status = {}));
+const projectSchema = new mongoose_1.Schema({
     title: {
         type: String,
         required: [true, "Title is required"],
+        trim: true,
     },
     description: {
         type: String,
-        maxlength: 2000,
         required: [true, "Description is required"],
+        maxlength: [2000, "Description cannot exceed 2000 characters"],
     },
-    mediaUrl: {
-        type: String,
-        trim: true,
+    skillsRequired: {
+        type: [String],
+        required: [true, "At least one skill is required"],
         validate: {
-            validator: (value) => validator_1.default.isURL(value),
-            message: "Please enter a valid URL",
+            validator: (value) => value.length > 0,
+            message: "Skills required cannot be empty",
         },
+    },
+    budget: {
+        type: Number,
+        required: [true, "Budget is required"],
+        min: [0, "Budget must be a positive number"],
+    },
+    deadline: {
+        type: Date,
+        required: [true, "Deadline is required"],
+        validate: {
+            validator: (value) => value > new Date(),
+            message: "Deadline must be a future date",
+        },
+    },
+    status: {
+        type: String,
+        enum: Object.values(Status),
+        default: Status.OPEN,
     },
     user: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "User",
         required: true,
     },
+}, {
+    timestamps: true, // Adds `createdAt` and `updatedAt` fields
 });
-exports.default = (0, mongoose_1.model)("Portfolio", portfolioSchema);
+exports.default = (0, mongoose_1.model)("Project", projectSchema);

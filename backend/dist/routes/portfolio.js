@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const portfolio_1 = require("../controllers/portfolio");
+const authMiddleware_1 = require("../middlewares/authMiddleware");
+const router = (0, express_1.Router)();
+router.use(authMiddleware_1.requireAuth);
+router.post("/create-portfolio", portfolio_1.createPortfolio);
+router.put("/update-portfolio/:id", portfolio_1.updatePortfolio);
+router.delete("/delete-portfolio/:id", portfolio_1.deletePortfolio);
+router.get("/get-user-portfolio", portfolio_1.getUserPortfolio);
+exports.default = router;

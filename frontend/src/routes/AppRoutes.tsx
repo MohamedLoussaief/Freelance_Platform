@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from "../pages/Home";
 import Signup from "../pages/Signup";
@@ -15,16 +15,13 @@ const AppRoutes: React.FC = () =>{
 
 const {user} = useAuthContext()     
 const decodedToken = useDecodedToken()
-
-
-
 const userType = decodedToken?.userType;
 
 return(
 <Routes>
     <Route path="/" element={<Home/>} />
     <Route path="/login"  element={!user ? <Login/> : <Navigate to="/"/>} />
-    <Route path="/signup" element={!user ?<Signup/>: <Navigate to="/"/> } />
+    <Route path="/signup" element={<Signup/> } />
     {userType==="Freelancer"&&<Route path="/create-profile/*"  element={<CreateProfile/>} />}
     <Route path="/not-found"  element={<NotFoundPage/>} />
 </Routes>

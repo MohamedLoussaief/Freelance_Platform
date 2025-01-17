@@ -19,7 +19,8 @@ const requireAuth = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
     // verify authorization
     const { authorization } = req.headers;
     if (!authorization) {
-        return res.status(401).json({ error: "Authorization token is required" });
+        res.status(401).json({ error: "Authorization token is required" });
+        return;
     }
     const token = authorization.split(" ")[1];
     try {

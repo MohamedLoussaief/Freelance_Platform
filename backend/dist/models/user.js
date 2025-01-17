@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserType = void 0;
+exports.Proficiency = exports.Service = exports.UserType = void 0;
 const mongoose_1 = require("mongoose");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const CustomError_1 = __importDefault(require("../utils/CustomError"));
@@ -22,6 +22,23 @@ var UserType;
     UserType["Client"] = "Client";
     UserType["Freelance"] = "Freelancer";
 })(UserType || (exports.UserType = UserType = {}));
+var Service;
+(function (Service) {
+    Service["WebMobileSoftwareDev"] = "Web, Mobile & Software Development";
+    Service["ITNetworking"] = "IT & Networking";
+    Service["DataScienceAnalytics"] = "Data Science & Analytics";
+    Service["DesignCreative"] = "Design & Creative";
+    Service["SalesMarketing"] = "Sales & Marketing";
+    Service["Translation"] = "Translation";
+    Service["Writing"] = "Writing";
+})(Service || (exports.Service = Service = {}));
+var Proficiency;
+(function (Proficiency) {
+    Proficiency["Beginner"] = "Beginner";
+    Proficiency["Intermediate"] = "Intermediate";
+    Proficiency["Advanced"] = "Advanced";
+    Proficiency["Fluent"] = "Fluent";
+})(Proficiency || (exports.Proficiency = Proficiency = {}));
 // User Schema
 const userSchema = new mongoose_1.Schema({
     userType: {
@@ -55,7 +72,7 @@ const userSchema = new mongoose_1.Schema({
     email: {
         type: String,
         required: [true, "Email address is required"],
-        unique: true,
+        unique: [true, "This email is already in use"],
         trim: true,
         lowercase: true,
         validate: {
@@ -69,27 +86,38 @@ const userSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "Password is required"],
     },
-    profilPicture: { type: String, default: null },
-    jobTitle: { type: String, required: [true, "Job title is required"] },
-    bio: { type: String, maxlength: 2000, default: null },
-    skills: { type: [String] },
-    experience: [
-        {
-            jobTitle: { type: String, required: [true, "Job title is required"] },
-            company: { type: String, required: [true, "Company name is required"] },
-            currentlyWorking: { type: Boolean, required: true },
-            startDate: { type: Date, required: [true, "Start date is required"] },
-            endDate: {
-                type: Date,
-                validate: {
-                    validator: function (value) {
-                        return !value || value > this.startDate;
+    profilPicture: { type: String },
+    service: { type: String },
+    jobTitle: { type: String },
+    bio: {
+        type: String,
+        minlength: [100, "Bio must be at least 100 characters long."],
+        maxlength: [2000, "Bio cannot exceed 2000 characters."],
+        default: null,
+    },
+    skills: {
+        type: [String],
+    },
+    experience: {
+        type: [
+            {
+                jobTitle: { type: String, required: [true, "Job title is required"] },
+                company: { type: String, required: [true, "Company name is required"] },
+                currentlyWorking: { type: Boolean, default: false },
+                startDate: { type: Date, required: [true, "Start date is required"] },
+                endDate: {
+                    type: Date,
+                    validate: {
+                        validator: function (value) {
+                            return !value || value > this.startDate;
+                        },
+                        message: "End date must be after the start date.",
                     },
-                    message: "End date must be after the start date.",
                 },
+                description: { type: String, maxlength: 3998 },
             },
-        },
-    ],
+        ],
+    },
     education: [
         {
             university: { type: String, required: [true, "University is required"] },
@@ -148,6 +176,9 @@ const userSchema = new mongoose_1.Schema({
 userSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = this;
+        if (!user.isModified("password")) {
+            return next();
+        }
         const password = user.password;
         const validations = [
             {

@@ -15,30 +15,40 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { post } from "../../api/client";
 
-// Zod schema for validation
-const experienceSchema = z
-  .object({
-    jobTitle: z.string().min(1, "Job title is required"),
-    company: z.string().min(1, "Company is required"),
-    currentlyWorking: z.boolean(),
-    startDate: z.date({
-      required_error: "Start date is required",
-      invalid_type_error: "Invalid start date",
-    }),
-    endDate: z.date().optional(),
-    description: z.string().optional(),
-  });
+// Zod schema for validation 
+const experienceSchema = z.object({
+  jobTitle: z.string().min(1, "Job title is required"),
+  company: z.string().min(1, "Company is required"),
+  currentlyWorking: z.boolean(),
+  startDate: z.string().nonempty("Start date is required"),
+  endDate: z.string().optional(),
+  description: z.string().optional(),
+}).refine((data) => data.currentlyWorking || (data.endDate), 
+{
+  message: "End date is required",
+  path: ["endDate"],
+})
+.refine(
+  (data) =>
+    data.currentlyWorking || (data.endDate && data.startDate < data.endDate),
+  {
+    message: "End date must be after start date",
+    path: ["endDate"],
+  }
+);
 
 type ExperienceFormData = z.infer<typeof experienceSchema>;
 
 interface ExperiencePopupProps {
   isOpen: boolean;
   onClose: () => void;
+  onSave: () => void;
 }
 
 const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
   isOpen,
   onClose,
+  onSave,
 }) => {
   const {
     register,
@@ -53,15 +63,13 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
       jobTitle: "",
       company: "",
       currentlyWorking: false,
-      startDate: undefined,
-      endDate: undefined,
+      startDate: "",
+      endDate: "",
       description: "",
     },
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>();
-
   const currentlyWorking = watch("currentlyWorking");
   const startDate = watch("startDate");
   const endDate = watch("endDate");
@@ -72,29 +80,31 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
     }
   }, [isOpen, reset]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: ExperienceFormData) => {
     setIsLoading(true);
-    try {
-      const addExperience = await post("/profile/add-experience", { experience: [data] });
-      if (addExperience) {
-        return true;
-      }
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
-      onClose();
+
+    // Convert string dates to Date objects before submitting
+    const payload = {
+      ...data,
+      startDate: new Date(data.startDate),
+      endDate: data.endDate ? new Date(data.endDate) : undefined,
+    };
+
+    const addExperience = await post("/profile/add-experience", { experience: [payload] });
+    if (addExperience) {
+      onSave();
     }
+    setIsLoading(false);
+    onClose();
   };
 
-  // Handle the checkbox change to ensure the endDate is cleared when checked
   const handleCurrentlyWorkingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
     setValue("currentlyWorking", isChecked);
 
     // Reset end date if the checkbox is checked (currently working)
     if (isChecked) {
-      setValue("endDate", undefined);
+      setValue("endDate", "");
     }
   };
 
@@ -128,8 +138,9 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
           }
           label="I currently work here"
         />
+        
         <TextField
-          {...register("startDate", { valueAsDate: true })}
+          {...register("startDate")}
           label="Start Date"
           type="date"
           fullWidth
@@ -137,10 +148,14 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
           error={!!errors.startDate}
           helperText={errors.startDate?.message}
           InputLabelProps={{ shrink: true }}
+          value={startDate || ""}
+          inputProps={{
+            max: new Date().toISOString().split("T")[0],
+          }}
         />
         {!currentlyWorking && (
           <TextField
-            {...register("endDate", { valueAsDate: true })}
+            {...register("endDate")}
             label="End Date"
             type="date"
             fullWidth
@@ -148,8 +163,13 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
             error={!!errors.endDate}
             helperText={errors.endDate?.message}
             InputLabelProps={{ shrink: true }}
+            value={endDate || ""}
+            inputProps={{
+              max: new Date().toISOString().split("T")[0], 
+            }}
           />
         )}
+
         <TextField
           {...register("description")}
           label="Description"

@@ -9,14 +9,15 @@ const AccountCreated:React.FC = () => {
 const navigate = useNavigate();
 const decodedToken = useDecodedToken()
 const userType = decodedToken?.userType;
-
+//console.log(userType)
 useEffect(() => {
     const timer = setTimeout(() => {
+      
       userType==="Freelancer"?navigate("/create-profile/field-work"):navigate("/") // Replace with your actual verify email route
-    }, 30000); // 30 seconds
+    }, 3000); // 30 seconds
 
     return () => clearTimeout(timer); // Cleanup timer on component unmount
-  }, [navigate]);
+  }, [userType]);
     
   return (
     <Box

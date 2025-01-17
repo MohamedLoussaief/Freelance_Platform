@@ -31,7 +31,7 @@ export const loginService = async (email: string, password: string) => {
 
   const token = createToken(
     { _id: userExist._id as Types.ObjectId, userType: userExist.userType },
-    "15m",
+    "1h",
     process.env.ACCESS_TOKEN_SECRET as string
   );
 
@@ -109,7 +109,9 @@ export const sendEmailCode = async (email: string, path: string) => {
 
   // Configure email options
   const subject =
-    path === "/emailActivation" ? "Account Activation Code" : "Forgot Password";
+    path === "/email-activation"
+      ? "Account Activation Code"
+      : "Forgot Password";
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,

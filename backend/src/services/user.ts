@@ -191,7 +191,8 @@ const updateUserEducation = async (
 const updateUserLanguage = async (
   languageId: string,
   user: IUser,
-  proficiency: Proficiency
+  proficiency: Proficiency,
+  language: string
 ) => {
   if (!user.languages || user.languages.length === 0) {
     throw new CustomError("No language found for this user", 400);
@@ -205,7 +206,7 @@ const updateUserLanguage = async (
   }
 
   user.languages[languageIndex].proficiency = proficiency;
-
+  user.languages[languageIndex].language = language;
   await user.save();
 };
 

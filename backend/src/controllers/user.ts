@@ -258,9 +258,9 @@ const updateLanguage = async (
 ) => {
   const user = req.user;
   const { id } = req.params;
-  const { proficiency } = req.body;
+  const { language, proficiency } = req.body;
   try {
-    await updateUserLanguage(id, user, proficiency);
+    await updateUserLanguage(id, user, proficiency, language);
     res.status(200).json({ msg: "Language proficiency updated successfully" });
     return;
   } catch (error: any) {

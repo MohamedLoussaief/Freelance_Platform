@@ -16,6 +16,7 @@ import { z } from "zod";
 import { getNames } from "country-list";
 import { signup } from "../../services/userService";
 import { useNavigate } from "react-router-dom";
+import { useAuthContext } from "../../context/AuthContext";
 
 
 
@@ -44,6 +45,7 @@ type SignupFormData = z.infer<typeof signupSchema>;
 const SignupForm: React.FC<{selectedRole:UserType|undefined, 
   setSuccess:(s:boolean)=>void}> = ({selectedRole, setSuccess}) => {
 
+  const { dispatch } = useAuthContext();  
   const navigate = useNavigate();
 
   const {
@@ -84,6 +86,7 @@ const SignupForm: React.FC<{selectedRole:UserType|undefined,
     try{
      const res = await signup(data)
   if(res){
+    dispatch({ type: "LOGIN", payload: {token:res} });
     setSuccess(true)
      }
 

@@ -1,190 +1,180 @@
-import { Box, FormHelperText, IconButton, MenuItem, Select, Typography } from "@mui/material"
+import { Box, FormHelperText, IconButton, MenuItem, Select, Typography } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
-import NavBar from "../../components/organisms/NavBar"
-import StepNavigation from "../../components/molecules/StepNavigation"
+import NavBar from "../../components/organisms/NavBar";
+import StepNavigation from "../../components/molecules/StepNavigation";
 import { useEffect, useState } from "react";
 import Button from "../../components/atoms/Button";
-import { post } from "../../api/client";
+import { post, remove, update } from "../../api/client";
 import useUserData from "../../hooks/useUserData";
 import languagesList from "iso-language-codes";
 
-
-
 interface Language {
-_id: number;
-language: string;
-proficiency: string;
+  _id: number;
+  language: string;
+  proficiency: string;
 }
 
-const Language:React.FC = ()=>{
+const Language: React.FC = () => {
+  const { userData, loading } = useUserData();
+  const [existingLanguages, setExistingLanguages] = useState<Language[]>([]);
+  const [newLanguages, setNewLanguages] = useState<Language[]>([]);
+  const [error, setError] = useState<string>("");
 
-   
+  
+  useEffect(() => {
+    if (!loading && userData?.languages) {
+      setExistingLanguages([...userData.languages]);
+    }
+  }, [userData, loading]);
 
-const { userData, loading } = useUserData();    
-const [languages, setLanguages] = useState<Language[]>([]);
-const [error, setError] = useState<string>("") 
+  // Add a new language
+  const addLanguage = () => {
+    const newId = Math.max(...existingLanguages.map((lang) => lang._id), 0) + 1;
+    setNewLanguages((prev) => [...prev, { _id: newId, language: "", proficiency: "" }]);
+  };
 
+  // Update a language (either existing or new)
+  const updateLanguage = async (id: number, field: "language" | "proficiency", value: string) => {
+    const isExistingLanguage = existingLanguages.some((lang) => lang._id === id);
 
-useEffect(() => {
-  if (!loading && userData?.languages) {
-    setLanguages([...userData?.languages])
-  }
-}, [userData, loading]);
+    if (isExistingLanguage) {
+      const updatedLanguages = existingLanguages.map((lang) =>
+        lang._id === id ? { ...lang, [field]: value } : lang
+      );
+      setExistingLanguages(updatedLanguages);
 
+      const updatedLanguage = updatedLanguages.find((lang) => lang._id === id);
+      if (updatedLanguage) {
+        await update(`/profile/update-language/${id}`, updatedLanguage);
+      }
+    } else {
+      setNewLanguages((prev) =>
+        prev.map((lang) => (lang._id === id ? { ...lang, [field]: value } : lang))
+      );
+    }
+  };
 
+  // Remove a language (either existing or new)
+  const removeLanguage = async (id: number) => {
+    const isExistingLanguage = existingLanguages.some((lang) => lang._id === id);
 
-const addLanguage = () => {
-const newId = languages.length + 1;
-setLanguages([...languages, { _id: newId, language: "", proficiency: "" }]);
-};
+    if (isExistingLanguage) {
+      try {
+        
+        await remove(`/profile/delete-language/${id}`);
+        
+        setExistingLanguages((prev) => prev.filter((lang) => lang._id !== id));
+      } catch (error: any) {
+        setError(error.message); 
+      }
+    } else {
+      setNewLanguages((prev) => prev.filter((lang) => lang._id !== id));
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async () => {
+    setError("");
+
     
-const updateLanguage = (id: number, field: "language" | "proficiency", value: string) => {
-setLanguages((prev) =>
-prev.map((lang) => (lang._id === id ? { ...lang, [field]: value } : lang))
-);
-};
+    if (existingLanguages.length === 0 && newLanguages.length === 0) {
+      setError("Please add a language");
+      return;
+    }
+
     
-const removeLanguage = (id: number) => {
-setLanguages((prev) => prev.filter((lang) => lang._id !== id));
-};
+    const hasEmptyProficiency = [...existingLanguages, ...newLanguages].some(
+      (lang) => !lang.proficiency
+    );
 
-const handleSubmit = async()=>{
+    const hasEmptyLanguage = [...existingLanguages, ...newLanguages].some(
+      (lang) => !lang.language
+    );
 
-if(languages.length===0){
-setError("Please add a language");
-return;
-}   
+    if (hasEmptyProficiency) {
+      setError("Please select a proficiency level for all languages");
+      return;
+    }
 
-try{
+    if(hasEmptyLanguage){
+      setError("Please select a language.")
+      return;
+    }
+    
+    try {
+      // Submit only new languages
+      const addLanguages = await post("/profile/add-languages", { languages: newLanguages });
+      if (addLanguages) {
+        return true;
+      }
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
 
-const addLanguages = await post("/profile/add-languages", {languages:languages}) 
+ 
+  const languages = [...existingLanguages, ...newLanguages];
 
-if(addLanguages){
-return true;
-}
+  return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '95vh' }}>
+      <NavBar />
 
-}catch(error:any){
-setError(error.message)
-}
+      <Box sx={{ maxWidth: 600, margin: "0 auto", padding: 2, marginTop: "10%", marginBottom: "10%" }}>
+        <Typography variant="h6" sx={{ marginBottom: 2 }}>
+          Looking good. Next, tell us which languages you speak.
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ marginBottom: 4 }}>
+          Clients are often interested to know what languages you speak.
+        </Typography>
 
-}
+        {languages.map((language) => (
+          <Box key={language._id} sx={{ display: "flex", alignItems: "center", marginBottom: 2, gap: 2 }}>
+            <Select
+              value={language.language}
+              onChange={(e) => updateLanguage(language._id, "language", e.target.value)}
+              displayEmpty
+              sx={{ flex: 1 }}
+            >
+              <MenuItem value="" disabled>Select a language</MenuItem>
+              {languagesList.map((lang) => (
+                <MenuItem key={lang.iso639_1} value={lang.name}>{lang.name}</MenuItem>
+              ))}
+            </Select>
 
+            <Select
+              value={language.proficiency}
+              onChange={(e) => updateLanguage(language._id, "proficiency", e.target.value)}
+              displayEmpty
+              sx={{ flex: 1 }}
+            >
+              <MenuItem value="" disabled>My level is</MenuItem>
+              <MenuItem value="Beginner">Beginner</MenuItem>
+              <MenuItem value="Intermediate">Intermediate</MenuItem>
+              <MenuItem value="Advanced">Advanced</MenuItem>
+              <MenuItem value="Fluent">Fluent</MenuItem>
+            </Select>
 
-return(
-<Box
-sx={{
-display: 'flex',
-flexDirection: 'column', 
-height: '95vh',
-}}
->
-
-<NavBar/>
-
-<>
-
-<Box sx={{ maxWidth: 600, margin: "0 auto", padding: 2, 
-marginTop:"10%",
-marginBottom:"10%"
-}}>
-      <Typography variant="h6" sx={{ marginBottom: 2 }}>
-        Looking good. Next, tell us which languages you speak.
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ marginBottom: 4 }}>
-        Clients are often interested to know what languages you speak.
-      </Typography>
-
-      {languages.map((language) => (
-        <Box
-          key={language._id}
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            marginBottom: 2,
-            gap: 2,
-          }}
-        >
-          <Select
-            value={language.language}
-            onChange={(e) => updateLanguage(language._id, "language", e.target.value)}
-            displayEmpty
-            sx={{ flex: 1 }}
-          >
-            <MenuItem value="" disabled>
-              Select a language
-            </MenuItem>
-            {languagesList.map((lang) => (
-    <MenuItem key={lang.iso639_1} value={lang.name}>
-      {lang.name}
-    </MenuItem>
-  ))}
-          </Select>
-
-          <Select
-            value={language.proficiency}
-            onChange={(e) => updateLanguage(language._id, "proficiency", e.target.value)}
-            displayEmpty
-            sx={{ flex: 1 }}
-          >
-            <MenuItem value="" disabled>
-              My level is
-            </MenuItem>
-            <MenuItem value="Beginner">Beginner</MenuItem>
-            <MenuItem value="Intermediate">Intermediate</MenuItem>
-            <MenuItem value="Advanced">Advanced</MenuItem>
-            <MenuItem value="Fluent">Fluent</MenuItem>
-          </Select>
-
-          {(
             <IconButton onClick={() => removeLanguage(language._id)} color="error">
               <DeleteIcon />
             </IconButton>
-          )}
-        </Box>
-      ))}
-    {/* Error Message */}
-    {error && <FormHelperText sx={{color:"red"}}>{error}</FormHelperText>}
-      <Button
-        onClick={addLanguage}
-        variant="outlined"
-        color="primary"
-        sx={{ display: "flex", alignItems: "center", marginTop: 2 }}
-      >
-        + Add a language
-      </Button>
+          </Box>
+        ))}
+
+        {error && <FormHelperText sx={{ color: "red" }}>{error}</FormHelperText>}
+
+        <Button
+          onClick={addLanguage}
+          variant="outlined"
+          color="primary"
+          sx={{ display: "flex", alignItems: "center", marginTop: 2 }}
+        >
+          + Add a language
+        </Button>
+      </Box>
+
+      <StepNavigation action={handleSubmit} />
     </Box>
+  );
+};
 
-
-
-</>
-
-
-<StepNavigation action={handleSubmit} />
-
-</Box>)
-} 
-
-export default Language
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export default Language;

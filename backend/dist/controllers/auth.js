@@ -36,6 +36,7 @@ const loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function
         });
         const token = login.token;
         res.status(200).json({ token });
+        return;
     }
     catch (error) {
         next(error);
@@ -80,7 +81,7 @@ const refresh = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             res.status(401).json({ message: "Unauthorized" });
             return;
         }
-        const token = (0, createToken_1.createToken)({ _id: foundUser._id, userType: foundUser.userType }, "15m", process.env.ACCESS_TOKEN_SECRET);
+        const token = (0, createToken_1.createToken)({ _id: foundUser._id, userType: foundUser.userType }, "1h", process.env.ACCESS_TOKEN_SECRET);
         res.json({ token });
     }));
 });

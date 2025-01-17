@@ -19,7 +19,7 @@ const LoginForm = () => {
     password: "",
     showPassword: false,
   });
-  const { dispatch, user } = useAuthContext();
+  const { dispatch } = useAuthContext();
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const navigate = useNavigate();
@@ -52,7 +52,6 @@ const LoginForm = () => {
       if (token) {
         console.log(token)
         dispatch({ type: "LOGIN", payload: {token:token} });
-        console.log(user)
         navigate("/");
       }
     } catch (error: any) {

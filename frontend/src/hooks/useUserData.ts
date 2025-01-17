@@ -6,22 +6,22 @@ const useUserData = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [errorData, setErrorData] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const data = await getUserData();
-        setUserData(data);
-        setLoading(false);
-      } catch (err: any) {
-        setErrorData("Failed to load user data");
-        setLoading(false);
-      }
-    };
+  const fetchUserData = async () => {
+    try {
+      const data = await getUserData();
+      setUserData(data);
+      setLoading(false);
+    } catch (err: any) {
+      setErrorData("Failed to load user data");
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUserData();
   }, []);
 
-  return { userData, loading, errorData };
+  return { userData, loading, fetchUserData, errorData };
 };
 
 export default useUserData;

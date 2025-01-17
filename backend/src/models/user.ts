@@ -175,7 +175,10 @@ const userSchema = new Schema<IUser>({
           validator: function (this: { startYear: number }, value: number) {
             const currentYear = new Date().getFullYear();
             const maxFutureYear = currentYear + 7;
-            return value >= this.startYear && value <= maxFutureYear;
+            if (value) {
+              return value >= this.startYear && value <= maxFutureYear;
+            }
+            return true;
           },
           message: (props) =>
             `End year (${props.value}) must be after the start year and within 7 years of the current year.`,
@@ -185,7 +188,13 @@ const userSchema = new Schema<IUser>({
   ],
   languages: [
     {
-      language: { type: String, required: [true, "Language is required"] },
+      _id: {
+        type: Number,
+      },
+      language: {
+        type: String,
+        required: [true, "Language is required"],
+      },
       proficiency: {
         type: String,
         enum: ["Beginner", "Intermediate", "Advanced", "Fluent"],

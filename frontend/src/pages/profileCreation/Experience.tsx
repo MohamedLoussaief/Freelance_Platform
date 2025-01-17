@@ -9,7 +9,7 @@ import Card from "../../components/molecules/Card";
 
 const Experience:React.FC = ()=>{
 
-const { userData, loading } = useUserData();  
+const { userData, fetchUserData, loading } = useUserData();  
 const [isDialogOpen, setIsDialogOpen] = useState(false);
 const handleOpenDialog = () => setIsDialogOpen(true);
 const handleCloseDialog = () => setIsDialogOpen(false);
@@ -97,7 +97,7 @@ return(
       </Box>
 
       {/* Experience Cards */}
-      {userData?.experience.map((exp: any) => (
+      {loading?<></>:userData?.experience.map((exp: any) => (
         <Card experience={exp} key={exp._id} />
       ))}
     </Box>
@@ -110,6 +110,7 @@ return(
       <ExperiencePopup
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}
+        onSave={fetchUserData}
       />
 </>
 

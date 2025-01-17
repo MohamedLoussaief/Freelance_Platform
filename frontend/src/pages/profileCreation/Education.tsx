@@ -10,7 +10,7 @@ import EducationPopup from "../../components/organisms/EducationPopup";
 
 const Experience: React.FC = ()=>{
 
-const { userData, loading } = useUserData();      
+const { userData, fetchUserData, loading } = useUserData();      
 const [isDialogOpen, setIsDialogOpen] = useState(false);    
 const handleOpenDialog = () => setIsDialogOpen(true);
 const handleCloseDialog = () => setIsDialogOpen(false);
@@ -24,7 +24,7 @@ display: 'flex',
 flexDirection: 'column', 
 height: '95vh',
 }}
-      >
+>
 
 
 <NavBar/>
@@ -94,7 +94,7 @@ height: '95vh',
       </Box>
 
       {/* Experience Cards */}
-      { userData?.education.map((edu: any) => (
+      {loading?<></>:userData?.education.map((edu: any) => (
         <Card education={edu} key={edu?._id} />
       )) }
     </Box>
@@ -108,6 +108,7 @@ height: '95vh',
 <EducationPopup 
 isOpen={isDialogOpen}
 onClose={handleCloseDialog}
+onSave={fetchUserData}
 />
 
 
