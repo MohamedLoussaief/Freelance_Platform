@@ -60,9 +60,7 @@ const Language: React.FC = () => {
 
     if (isExistingLanguage) {
       try {
-        
         await remove(`/profile/delete-language/${id}`);
-        
         setExistingLanguages((prev) => prev.filter((lang) => lang._id !== id));
       } catch (error: any) {
         setError(error.message); 

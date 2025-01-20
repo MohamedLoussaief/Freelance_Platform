@@ -12,3 +12,13 @@ export interface User {
   country: string;
   userType: string;
 }
+
+export interface IExperience {
+  _id: string;
+  jobTitle: string;
+  company: string;
+  currentlyWorking: boolean;
+  startDate: string;
+  endDate: string;
+  description: string;
+}

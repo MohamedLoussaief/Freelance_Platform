@@ -220,6 +220,7 @@ const userSchema = new Schema<IUser>({
   codeExpires: { type: Number },
 });
 
+// Password validation pre save middleware
 userSchema.pre("save", async function (next) {
   const user = this as IUser;
 
@@ -262,6 +263,30 @@ userSchema.pre("save", async function (next) {
   const saltRounds = 10;
   user.password = await bcrypt.hash(password, saltRounds);
 
+  next();
+});
+
+// Remove fields that are not relevant to the specific userType
+userSchema.pre("save", async function (next) {
+  const user = this as IUser;
+
+  if (user.userType === UserType.Client) {
+    delete user.service;
+    delete user.jobTitle;
+    delete user.bio;
+    delete user.skills;
+    delete user.experience;
+    delete user.education;
+    delete user.languages;
+    delete user.hourlyRate;
+    delete user.profilPicture;
+  }
+
+  if (user.userType === UserType.Freelance) {
+    delete user.companyName;
+    delete user.sector;
+    delete user.paymentMethod;
+  }
   next();
 });
 

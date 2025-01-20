@@ -1,18 +1,35 @@
-import { Box, Typography } from "@mui/material";
+import { Box, FormHelperText, Typography } from "@mui/material";
 import NavBar from "../../components/organisms/NavBar";
 import StepNavigation from "../../components/molecules/StepNavigation";
 import { useState } from "react";
 import ExperiencePopup from "../../components/organisms/ExperiencePopup";
 import useUserData from "../../hooks/useUserData";
 import Card from "../../components/molecules/Card";
+import { remove } from "../../api/client";
+import { IExperience } from "../../types/models/User";
 
 
 const Experience:React.FC = ()=>{
 
-const { userData, fetchUserData, loading } = useUserData();  
+const { userData, fetchUserData, loading } = useUserData(); 
+const [action, setAction] = useState<"update"|"add">("add");
+const [exp, setExp] = useState<IExperience>(); 
 const [isDialogOpen, setIsDialogOpen] = useState(false);
 const handleOpenDialog = () => setIsDialogOpen(true);
 const handleCloseDialog = () => setIsDialogOpen(false);
+const [error, setError] = useState<string>("")
+
+
+const removeExperience = async(id:string)=>{
+setError("");
+try{
+await remove(`/profile/delete-experience/${id}`)  
+fetchUserData();
+}catch(error:any){
+setError(error.message)
+}
+}
+
 
 
 
@@ -69,6 +86,7 @@ return(
         borderRadius: "8px",
       }}
       >
+
       {/* Add Experience Card */}
       <Box
         display="flex"
@@ -86,7 +104,7 @@ return(
           "&:hover": { backgroundColor: "#f9f9f9" },
           flexShrink: 0, // Prevent shrinking
         }}
-        onClick={handleOpenDialog}
+        onClick={()=>{handleOpenDialog();setAction("add")}}
       >
         <Typography variant="h5" fontWeight="bold" mt={1}>
           +
@@ -96,13 +114,21 @@ return(
         </Typography>
       </Box>
 
+
       {/* Experience Cards */}
-      {loading?<></>:userData?.experience.map((exp: any) => (
-        <Card experience={exp} key={exp._id} />
+      {loading?<></>:userData.experience.map((exp: any) => (
+        <Card experience={exp} key={exp._id} 
+        remove={removeExperience}
+        expId={exp._id}
+        setExp={setExp}
+        setAction={setAction}
+        openDialog={handleOpenDialog}
+        />
       ))}
     </Box>
 
-
+    {/* Error Message */}
+    {error && <FormHelperText sx={{color:"red"}}>{error}</FormHelperText>}
 
       </Box>
 
@@ -111,6 +137,8 @@ return(
         isOpen={isDialogOpen}
         onClose={handleCloseDialog}
         onSave={fetchUserData}
+        action={action}
+        data={exp}
       />
 </>
 

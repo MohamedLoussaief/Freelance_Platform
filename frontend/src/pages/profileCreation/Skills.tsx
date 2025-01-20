@@ -2,7 +2,7 @@ import { Box, Chip, FormHelperText, InputAdornment, TextField, Typography } from
 import StepNavigation from "../../components/molecules/StepNavigation"
 import NavBar from "../../components/organisms/NavBar"
 import { useEffect, useState } from "react";
-import { update } from "../../api/client";
+import { remove, update } from "../../api/client";
 import useUserData from "../../hooks/useUserData";
 
 
@@ -30,12 +30,14 @@ const addSkill = (newSkill: string) => {
     setInputValue(""); // Clear input
   };
 
-const removeSkill = (skillToRemove: string) => {
+const removeSkill = async(skillToRemove: string) => {
+   try{
+    await remove(`/profile/delete-skills/${skillToRemove}`)
     setSkills(skills.filter((skill) => skill !== skillToRemove));
+   }catch(error:any){
+   setError(error.message)
+   }
   };
-
-
-
 
 const handleSubmit = async()=>{
 

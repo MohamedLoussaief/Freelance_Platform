@@ -9,11 +9,13 @@ import {
   DialogActions,
   Button,
   CircularProgress,
+  FormHelperText,
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { post } from "../../api/client";
+import { post, update } from "../../api/client";
+import { IExperience } from "../../types/models/User";
 
 // Zod schema for validation 
 const experienceSchema = z.object({
@@ -43,12 +45,16 @@ interface ExperiencePopupProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
+  action:"update"|"add";
+  data?:IExperience;
 }
 
 const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
   isOpen,
   onClose,
   onSave,
+  action,
+  data
 }) => {
   const {
     register,
@@ -70,33 +76,61 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
   const currentlyWorking = watch("currentlyWorking");
   const startDate = watch("startDate");
   const endDate = watch("endDate");
 
   useEffect(() => {
-    if (!isOpen) {
-      reset();
+    if (isOpen && action === "update" && data) {
+      reset({
+        jobTitle: data.jobTitle,
+        company: data.company,
+        currentlyWorking: data.currentlyWorking,
+        startDate: data.startDate?.split("T")[0],
+        endDate: data.endDate?.split("T")[0],
+        description: data.description,
+      });
+    } else if (!isOpen) {
+      reset({
+        jobTitle: "",
+        company: "",
+        currentlyWorking: false,
+        startDate: "",
+        endDate: "",
+        description: "",
+      });
     }
-  }, [isOpen, reset]);
+  }, [isOpen, action, data, reset]);
 
-  const onSubmit = async (data: ExperienceFormData) => {
+
+
+  const onSubmit = async (formData: ExperienceFormData) => {
     setIsLoading(true);
-
+    setError("");
+    
     // Convert string dates to Date objects before submitting
     const payload = {
-      ...data,
-      startDate: new Date(data.startDate),
-      endDate: data.endDate ? new Date(data.endDate) : undefined,
+      ...formData,
+      startDate: new Date(formData.startDate),
+      endDate: formData.endDate ? new Date(formData.endDate) : undefined,
     };
 
-    const addExperience = await post("/profile/add-experience", { experience: [payload] });
-    if (addExperience) {
+    try {
+      if (action === "add") {
+        await post("/profile/add-experience", { experience: [payload] });
+      } else if (action === "update" && data?._id) {
+        await update(`/profile/update-experience/${data._id}`, payload);
+      }
       onSave();
+      onClose();
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-    onClose();
   };
+
 
   const handleCurrentlyWorkingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
@@ -110,7 +144,7 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
 
   return (
     <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add Experience</DialogTitle>
+      <DialogTitle>Experience</DialogTitle>
       <DialogContent dividers>
         <TextField
           {...register("jobTitle")}
@@ -180,7 +214,9 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
           error={!!errors.description}
           helperText={errors.description?.message}
         />
+        {error && <FormHelperText sx={{ color: "red" }}>{error}</FormHelperText>}
       </DialogContent>
+      
       <DialogActions>
         <Button onClick={onClose} color="secondary">
           Cancel

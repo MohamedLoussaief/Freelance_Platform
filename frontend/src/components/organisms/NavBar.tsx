@@ -50,8 +50,6 @@ const NavBar: React.FC<{selectedRole?:UserType|undefined, setSelectedRole?:(role
     handleCloseMenu(); 
   };
 
-// console.log(loading)
-
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static" sx={{backgroundColor:"transparent", 
