@@ -22,3 +22,12 @@ export interface IExperience {
   endDate: string;
   description: string;
 }
+
+export interface IEducation {
+  _id: string;
+  university: string;
+  degree: string;
+  field: string;
+  startYear: number;
+  endYear: number;
+}

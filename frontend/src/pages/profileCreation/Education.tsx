@@ -1,19 +1,36 @@
-import { Box, Typography } from "@mui/material"
+import { Box, FormHelperText, Typography } from "@mui/material"
 import NavBar from "../../components/organisms/NavBar"
 import { useState } from "react";
 import useUserData from "../../hooks/useUserData";
 import Card from "../../components/molecules/Card";
 import StepNavigation from "../../components/molecules/StepNavigation";
 import EducationPopup from "../../components/organisms/EducationPopup";
+import { remove } from "../../api/client";
+import { IEducation } from "../../types/models/User";
 
 
 
 const Experience: React.FC = ()=>{
 
-const { userData, fetchUserData, loading } = useUserData();      
-const [isDialogOpen, setIsDialogOpen] = useState(false);    
+const { userData, fetchUserData, loading } = useUserData();
+const [action, setAction] = useState<"update"|"add">("add");      
+const [isDialogOpen, setIsDialogOpen] = useState(false);  
+const [edu, setEdu] = useState<IEducation>();  
 const handleOpenDialog = () => setIsDialogOpen(true);
 const handleCloseDialog = () => setIsDialogOpen(false);
+const [error, setError] = useState<string>("")
+
+
+const removeEducation = async(id:string)=>{
+setError("");
+try{
+await remove(`/profile/delete-education/${id}`)
+fetchUserData();
+}catch(error:any){
+setError(error.message)
+}
+}
+
 
 
 
@@ -83,7 +100,7 @@ height: '95vh',
           "&:hover": { backgroundColor: "#f9f9f9" },
           flexShrink: 0, // Prevent shrinking
         }}
-        onClick={handleOpenDialog}
+        onClick={()=>{handleOpenDialog();setAction("add")}}
       >
         <Typography variant="h5" fontWeight="bold" mt={1}>
           +
@@ -93,13 +110,20 @@ height: '95vh',
         </Typography>
       </Box>
 
-      {/* Experience Cards */}
+      {/* Education Cards */}
       {loading?<></>:userData?.education.map((edu: any) => (
-        <Card education={edu} key={edu?._id} />
+        <Card education={edu} key={edu?._id} 
+         removeEdu={removeEducation}
+         eduId={edu?._id}
+         setEdu={setEdu}
+         setAction={setAction}
+         openDialog={handleOpenDialog}
+        />
       )) }
     </Box>
 
-
+      {/* Error Message */}
+      {error && <FormHelperText sx={{color:"red"}}>{error}</FormHelperText>}
 
       </Box>
 
@@ -109,6 +133,8 @@ height: '95vh',
 isOpen={isDialogOpen}
 onClose={handleCloseDialog}
 onSave={fetchUserData}
+action={action}
+data={edu}
 />
 
 

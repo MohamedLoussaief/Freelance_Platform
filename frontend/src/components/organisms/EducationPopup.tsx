@@ -12,7 +12,8 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { post } from "../../api/client";
+import { post, update } from "../../api/client";
+import { IEducation } from "../../types/models/User";
 
 // Refined Zod schema for validation
 const educationSchema = z
@@ -53,9 +54,11 @@ interface EducationPopupProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
+  action:"update"|"add";
+  data?:IEducation;
 }
 
-const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose, onSave }) => {
+const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose, onSave, action, data }) => {
   const {
     register,
     handleSubmit,
@@ -74,23 +77,47 @@ const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose, onSave
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
   const startYear = watch("startYear");
   const endYear = watch("endYear");
 
   useEffect(() => {
-    if (!isOpen) {
-      reset();
+    if (isOpen && action === "update" && data) {
+      reset({
+        university: data.university,
+        degree: data.degree,
+        field: data.field,
+        startYear: String(data.startYear),
+        endYear: data.endYear?String(data.endYear):"",
+      });
+    } else if (!isOpen) {
+      reset({
+        university: "",
+        degree: "",
+        field: "",
+        startYear: "",
+        endYear: "",
+      })
     }
-  }, [isOpen, reset]);
+    
+  }, [isOpen, action, data, reset]);
 
-  const onSubmit = async (data: EducationFormData) => {
+  const onSubmit = async (formData: EducationFormData) => {
     setIsLoading(true);
-    const addEducation = await post("/profile/add-education", {education:data}) 
-    if(addEducation){
-      onSave();
-    }
-    setIsLoading(false);
-    onClose();
+    setError("");
+    try{
+       if(action==="add"){
+        await post("/profile/add-education", {education:formData}) 
+       }else if(action === "update" && data?._id){
+        await update(`/profile/update-education/${data._id}`, formData)
+       }
+       onSave();
+       onClose();
+     }catch(error:any){
+      setError(error.message);
+     }finally{
+      setIsLoading(false);
+     }   
   };
 
   return (
@@ -141,7 +168,7 @@ const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose, onSave
           helperText={errors.endYear?.message}
           value={endYear || ""}
         />
-
+        {error && <FormHelperText sx={{ color: "red" }}>{error}</FormHelperText>}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="secondary">

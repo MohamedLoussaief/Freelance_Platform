@@ -5,20 +5,26 @@ import { format } from "date-fns";
 import { IconButton } from "@mui/material";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { IExperience } from "../../types/models/User";
+import { IEducation, IExperience } from "../../types/models/User";
 
 const Card: React.FC<{ experience?:IExperience; education?: any,
-   remove:(id: string) => Promise<void>, 
-   expId:string,
+   removeExp?:(id: string) => Promise<void>, 
+   removeEdu?:(id: string)=>Promise<void>,
+   expId?:string,
+   eduId?:string,
    setExp?:Dispatch<SetStateAction<IExperience | undefined>>,
-   setAction:Dispatch<SetStateAction<"update"|"add">>,
-   openDialog:() => void 
+   setEdu?:Dispatch<SetStateAction<IEducation | undefined>>,
+   setAction?:Dispatch<SetStateAction<"update"|"add">>,
+   openDialog?:() => void 
   }> = ({
   experience,
   education,
-  remove,
+  removeExp,
+  removeEdu,
   expId,
+  eduId,
   setExp,
+  setEdu,
   setAction,
   openDialog
 }) => {
@@ -58,15 +64,15 @@ const Card: React.FC<{ experience?:IExperience; education?: any,
         <IconButton
           size="small"
           color="primary"
-          onClick={() =>{setExp&&setExp(experience);
-            setAction("update");openDialog();} }
+          onClick={() =>{setExp&&setExp(experience);setEdu&&setEdu(education)
+            setAction&&setAction("update");openDialog&&openDialog();} }
         >
           <EditOutlinedIcon />
         </IconButton>
         <IconButton
           size="small"
           color="primary"
-          onClick={()=>{remove(expId)}}
+          onClick={()=>{(expId&&removeExp)&&removeExp(expId);(eduId&&removeEdu)&&removeEdu(eduId)}}
         >
           <DeleteOutlineIcon />
         </IconButton>

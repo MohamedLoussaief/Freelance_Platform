@@ -118,7 +118,7 @@ return(
       {/* Experience Cards */}
       {loading?<></>:userData.experience.map((exp: any) => (
         <Card experience={exp} key={exp._id} 
-        remove={removeExperience}
+        removeExp={removeExperience}
         expId={exp._id}
         setExp={setExp}
         setAction={setAction}
