@@ -139,7 +139,10 @@ const userSchema = new mongoose_1.Schema({
                     validator: function (value) {
                         const currentYear = new Date().getFullYear();
                         const maxFutureYear = currentYear + 7;
-                        return value >= this.startYear && value <= maxFutureYear;
+                        if (value) {
+                            return value >= this.startYear && value <= maxFutureYear;
+                        }
+                        return true;
                     },
                     message: (props) => `End year (${props.value}) must be after the start year and within 7 years of the current year.`,
                 },
@@ -148,7 +151,13 @@ const userSchema = new mongoose_1.Schema({
     ],
     languages: [
         {
-            language: { type: String, required: [true, "Language is required"] },
+            _id: {
+                type: Number,
+            },
+            language: {
+                type: String,
+                required: [true, "Language is required"],
+            },
             proficiency: {
                 type: String,
                 enum: ["Beginner", "Intermediate", "Advanced", "Fluent"],
@@ -173,6 +182,7 @@ const userSchema = new mongoose_1.Schema({
     code: { type: Number },
     codeExpires: { type: Number },
 });
+// Password validation pre save middleware
 userSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = this;
@@ -210,6 +220,29 @@ userSchema.pre("save", function (next) {
         }
         const saltRounds = 10;
         user.password = yield bcrypt_1.default.hash(password, saltRounds);
+        next();
+    });
+});
+// Remove fields that are not relevant to the specific userType
+userSchema.pre("save", function (next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const user = this;
+        if (user.userType === UserType.Client) {
+            delete user.service;
+            delete user.jobTitle;
+            delete user.bio;
+            delete user.skills;
+            delete user.experience;
+            delete user.education;
+            delete user.languages;
+            delete user.hourlyRate;
+            delete user.profilPicture;
+        }
+        if (user.userType === UserType.Freelance) {
+            delete user.companyName;
+            delete user.sector;
+            delete user.paymentMethod;
+        }
         next();
     });
 });

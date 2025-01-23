@@ -139,7 +139,7 @@ const updateUserEducation = (edId, user, updatedEducation) => __awaiter(void 0, 
     yield user.save();
 });
 exports.updateUserEducation = updateUserEducation;
-const updateUserLanguage = (languageId, user, proficiency) => __awaiter(void 0, void 0, void 0, function* () {
+const updateUserLanguage = (languageId, user, proficiency, language) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     if (!user.languages || user.languages.length === 0) {
         throw new CustomError_1.default("No language found for this user", 400);
@@ -149,6 +149,7 @@ const updateUserLanguage = (languageId, user, proficiency) => __awaiter(void 0, 
         throw new CustomError_1.default("Language not found", 400);
     }
     user.languages[languageIndex].proficiency = proficiency;
+    user.languages[languageIndex].language = language;
     yield user.save();
 });
 exports.updateUserLanguage = updateUserLanguage;

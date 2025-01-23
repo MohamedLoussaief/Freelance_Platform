@@ -187,9 +187,9 @@ exports.updateEducation = updateEducation;
 const updateLanguage = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const user = req.user;
     const { id } = req.params;
-    const { proficiency } = req.body;
+    const { language, proficiency } = req.body;
     try {
-        yield (0, user_1.updateUserLanguage)(id, user, proficiency);
+        yield (0, user_1.updateUserLanguage)(id, user, proficiency, language);
         res.status(200).json({ msg: "Language proficiency updated successfully" });
         return;
     }

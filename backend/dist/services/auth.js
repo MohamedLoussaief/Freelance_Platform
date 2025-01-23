@@ -28,7 +28,7 @@ const loginService = (email, password) => __awaiter(void 0, void 0, void 0, func
     if (!match) {
         throw new CustomError_1.default("Incorrect password", 400);
     }
-    const token = (0, createToken_1.createToken)({ _id: userExist._id, userType: userExist.userType }, "15m", process.env.ACCESS_TOKEN_SECRET);
+    const token = (0, createToken_1.createToken)({ _id: userExist._id, userType: userExist.userType }, "1h", process.env.ACCESS_TOKEN_SECRET);
     return { token, userExist };
 });
 exports.loginService = loginService;
@@ -77,7 +77,9 @@ const sendEmailCode = (email, path) => __awaiter(void 0, void 0, void 0, functio
         throw error;
     }
     // Configure email options
-    const subject = path === "/emailActivation" ? "Account Activation Code" : "Forgot Password";
+    const subject = path === "/email-activation"
+        ? "Account Activation Code"
+        : "Forgot Password";
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
