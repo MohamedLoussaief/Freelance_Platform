@@ -7,6 +7,7 @@ import {
   Typography,
   InputAdornment,
   FormHelperText,
+  CircularProgress,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { login } from "../../services/userService";
@@ -129,6 +130,7 @@ const LoginForm = () => {
           type="submit"
           variant="contained"
           fullWidth
+          disabled={isLoading}
           sx={{
             backgroundColor: "#108a00",
             color: "#fff",
@@ -138,7 +140,11 @@ const LoginForm = () => {
             mb: 2,
           }}
         >
-          Log In
+          {isLoading ? (
+            <CircularProgress size={24} sx={{ color: "white" }} /> // Show loading spinner
+          ) : (
+            "Log In"
+          )}
         </Button>
       {/* Error Message */}
       {error && <FormHelperText sx={{color:"red", textAlign:"center", fontSize:"15px"}}>{error}</FormHelperText>}

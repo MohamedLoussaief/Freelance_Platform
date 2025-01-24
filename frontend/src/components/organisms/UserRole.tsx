@@ -7,13 +7,12 @@ import {
   Button,
   Radio
 } from "@mui/material";
-import { UserType } from "../../types/models/user";
+import { UserType } from "../../types/models/User";
 
 
 type UserRoleProps = {
   selectedRole:UserType|undefined
   setSelectedRole:(role:UserType)=>void
-  
   setConfirmRole:(confirm:boolean)=>void
 }
 
