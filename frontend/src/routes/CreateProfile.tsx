@@ -8,10 +8,17 @@ import Education from "../pages/profileCreation/Education";
 import Language from "../pages/profileCreation/Language";
 import Bio from "../pages/profileCreation/Bio";
 import HourlyRate from "../pages/profileCreation/HourlyRate";
+import useUserData from "../hooks/useUserData";
 
 
 
 const CreateProfile:React.FC = ()=>{
+
+const {loading} = useUserData();
+
+if(loading){  
+return<></>
+}
 
 return(
 
