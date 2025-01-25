@@ -8,6 +8,7 @@ import {
   Radio
 } from "@mui/material";
 import { UserType } from "../../types/models/User";
+import { useNavigate } from "react-router-dom";
 
 
 type UserRoleProps = {
@@ -21,10 +22,13 @@ type UserRoleProps = {
 const UserRole:React.FC<UserRoleProps> = ({selectedRole, setSelectedRole, setConfirmRole}) => {
     
   
-
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedRole(event.target.value as UserType);
   };
+
+
+  const navigate = useNavigate();
+
 
   return (
     <Box
@@ -129,6 +133,7 @@ const UserRole:React.FC<UserRoleProps> = ({selectedRole, setSelectedRole, setCon
             cursor: "pointer",
             textDecoration: "underline",
           }}
+          onClick={()=>navigate("/login")}
         >
           Log In
         </Typography>

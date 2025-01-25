@@ -58,7 +58,8 @@ const NavBar: React.FC<{selectedRole?:UserType|undefined, setSelectedRole?:(role
         }}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, 
-            fontFamily: "'Roboto Slab', sans-serif", fontWeight:"bold"}}>
+            fontFamily: "'Roboto Slab', sans-serif", fontWeight:"bold", cursor:"pointer"}} 
+            onClick={()=>navigate("/")}>
             FreelanceWave
           </Typography>
 {loading?(<>loading...</>): (!isAuthRoute&&<><SearchBarFilter/>

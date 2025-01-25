@@ -13,9 +13,15 @@ import NotFoundPage from "../pages/NotFound";
 
 const AppRoutes: React.FC = () =>{
 
-const {user} = useAuthContext()     
+const {user, loading} = useAuthContext()     
 const decodedToken = useDecodedToken()
 const userType = decodedToken?.userType;
+
+
+if(loading){
+return <></>
+}
+
 
 return(
 <Routes>
@@ -24,6 +30,7 @@ return(
     <Route path="/signup" element={<Signup/> } />
     {userType==="Freelancer"&&<Route path="/create-profile/*"  element={<CreateProfile/>} />}
     <Route path="/not-found"  element={<NotFoundPage/>} />
+    <Route path="*" element={<Navigate to="/not-found" />}/>
 </Routes>
 )
 

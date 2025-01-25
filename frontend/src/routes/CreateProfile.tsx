@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import FieldOfWork from "../pages/profileCreation/FieldOfWork";
 import Skills from "../pages/profileCreation/Skills";
 import JobTitle from "../pages/profileCreation/JobTitle";
@@ -16,14 +16,16 @@ const CreateProfile:React.FC = ()=>{
 return(
 
 <Routes>
-<Route path="/field-work" element={<FieldOfWork/>} />
-<Route path="/skills" element={<Skills/>} />
-<Route path="/job-title" element={ <JobTitle/> } />
-<Route path="/experience" element={<Experience/>} />
-<Route path="/education" element={<Education/>} />
-<Route path="/language" element={<Language/>} />
-<Route path="/bio" element={<Bio/>} />
-<Route path="/hourly-rate" element={<HourlyRate/>} />
+<Route path="field-work" element={<FieldOfWork/>} />
+<Route path="skills" element={<Skills/>} />
+<Route path="job-title" element={ <JobTitle/> } />
+<Route path="experience" element={<Experience/>} />
+<Route path="education" element={<Education/>} />
+<Route path="language" element={<Language/>} />
+<Route path="bio" element={<Bio/>} />
+<Route path="hourly-rate" element={<HourlyRate/>} />
+
+<Route path="*" element={<Navigate to="field-work"/>} />
 </Routes>
 
 
