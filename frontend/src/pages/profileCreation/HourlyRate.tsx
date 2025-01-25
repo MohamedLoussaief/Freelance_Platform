@@ -12,7 +12,7 @@ const HourlyRate:React.FC = ()=>{
 const { userData, loading } = useUserData();    
 const [hourlyRate, setHourlyRate] = useState<number>(1)
 const [error, setError] = useState<string>("");
-
+const [isLoading, setIsLoading] = useState<boolean>(false);
 
 
 useEffect(()=>{
@@ -47,8 +47,11 @@ setError("Please enter a strictly positive number.");
 
 const handleSubmit = async()=>{
 
+setIsLoading(true);
+
 if(hourlyRate<=0){
-setError("Please enter a valid number")    
+setError("Please enter a valid number")   
+setIsLoading(false) 
 return;
 }    
 
@@ -65,6 +68,8 @@ return true;
 
 setError(error.errors.hourlyRate)
 
+}finally{
+setIsLoading(false)  
 }
 
 }
@@ -126,7 +131,7 @@ step: 1,
 
 </Box>
 
-<StepNavigation action={handleSubmit}  />
+<StepNavigation action={handleSubmit} isLoading={isLoading} />
 
 </Box>
 )

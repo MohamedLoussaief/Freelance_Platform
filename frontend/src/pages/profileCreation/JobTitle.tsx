@@ -12,7 +12,7 @@ const JobTitle:React.FC = ()=>{
 const { userData, loading } = useUserData();
 const [jobTitle, setJobTitle] = useState<string>("");
 const [error, setError] = useState<string>("");
-
+const [isLoading, setIsLoading] = useState<boolean>(false);
 
 useEffect(()=>{
 
@@ -26,8 +26,11 @@ setJobTitle(userData?.jobTitle)
 
 const handleSubmit = async() => {
 
+setIsLoading(true)
+
 if(jobTitle.trim() === ""){
 setError("Please enter a job title.");
+setIsLoading(false);
 return;
 }
 
@@ -45,6 +48,8 @@ return true;
 
 setError(error.message)
 
+}finally{
+  setIsLoading(false)
 }
 
 };
@@ -101,7 +106,7 @@ return(
 
   </Box>
   
-  <StepNavigation action={handleSubmit} />
+  <StepNavigation action={handleSubmit} isLoading={isLoading}  />
 
 </Box>
 )

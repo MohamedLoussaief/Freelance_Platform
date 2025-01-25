@@ -18,7 +18,7 @@ const FieldOfWork:React.FC = ()=>{
 const { userData, loading } = useUserData();
 const [selectedOption, setSelectedOption] = useState<string>("");
 const [error, setError] = useState<string>("");
-
+const [isLoading, setIsLoading] = useState<boolean>(false)
 
 useEffect(()=>{
 if(!loading && userData?.service){
@@ -35,9 +35,12 @@ setError("")
 
 
 const handleSubmit = async()=>{
-    
+
+setIsLoading(true)
+
 if (!selectedOption) {
     setError("Please select a work type"); 
+    setIsLoading(false); 
     return;   
   }
 
@@ -53,6 +56,8 @@ return true
 
 setError(error.message)
 
+}finally{
+  setIsLoading(false)  
 }
 
 }
@@ -130,7 +135,7 @@ return (
        {error && <FormHelperText>{error}</FormHelperText>}
 </Box>
 
-<StepNavigation action={handleSubmit} />
+<StepNavigation action={handleSubmit} isLoading={isLoading}  />
 
 
 </Box>)

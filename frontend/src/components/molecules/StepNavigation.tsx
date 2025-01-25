@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Box, LinearProgress } from "@mui/material";
+import { Box, CircularProgress, LinearProgress } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom"; 
 import Button from "../atoms/Button"; 
 
 const StepNavigation: React.FC<{ action?: () => 
-  Promise<boolean | undefined> | true  }> = ({ action }) => {
+  Promise<boolean | undefined> | true; 
+  isLoading?:boolean}> = ({ action, isLoading }) => {
+
   const navigate = useNavigate();
   const location = useLocation(); // Get current route
 
@@ -84,7 +86,13 @@ const StepNavigation: React.FC<{ action?: () =>
         }}
         sx={{ width: "200px" }}
       >
-        Next
+        
+        {isLoading ? (
+            <CircularProgress size={24} sx={{ color: "white" }} /> 
+          ) : (
+            "Next"
+          )}
+
       </Button>
     </Box>
   );

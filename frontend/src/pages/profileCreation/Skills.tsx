@@ -14,6 +14,7 @@ const { userData, loading } = useUserData();
 const [skills, setSkills] = useState<string[]>([]);
 const [inputValue, setInputValue] = useState<string>("");
 const [error, setError] = useState<string>("")
+const [isLoading, setIsLoading] = useState<boolean>(false)
 
 
 useEffect(() => {
@@ -41,9 +42,12 @@ const removeSkill = async(skillToRemove: string) => {
 
 const handleSubmit = async()=>{
 
+setIsLoading(true)
+
 if(skills.length===0){
 
 setError("Please add skills"); 
+setIsLoading(false); 
 return;   
 
 }
@@ -62,6 +66,8 @@ return true
 
 setError(error.message)
 
+}finally{
+  setIsLoading(false)
 }
 
 }
@@ -164,7 +170,7 @@ sx={{
 
 
 
-<StepNavigation action={handleSubmit} />
+<StepNavigation action={handleSubmit} isLoading={isLoading} />
 
 
 </Box>

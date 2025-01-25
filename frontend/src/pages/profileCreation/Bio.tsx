@@ -12,7 +12,7 @@ const Bio:React.FC = ()=>{
 const { userData, loading } = useUserData();
 const [bio, setBio] = useState<string>("");
 const [error, setError] = useState<string>("");
-
+const [isLoading, setIsLoading] = useState<boolean>(false);
 
 useEffect(()=>{
 
@@ -45,8 +45,11 @@ setError("");
 
 const handleSubmit = async()=>{
 
+setIsLoading(true)    
+
 if(bio.trim()===""){
 setError("Please enter your bio.")
+setIsLoading(false)
 return;
 }
 
@@ -63,6 +66,8 @@ return true
 
 }catch(error:any){
 setError(error.errors.bio)
+}finally{
+setIsLoading(false)    
 }
 
 }
@@ -120,7 +125,7 @@ maxLength: 2000,
 {error && <FormHelperText sx={{color:"red"}}>{error}</FormHelperText>}
 </Box>
 
-<StepNavigation action={handleSubmit} />
+<StepNavigation action={handleSubmit} isLoading={isLoading} />
 
 </Box>)
 

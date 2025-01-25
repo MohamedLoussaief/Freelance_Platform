@@ -19,7 +19,7 @@ const Language: React.FC = () => {
   const [existingLanguages, setExistingLanguages] = useState<Language[]>([]);
   const [newLanguages, setNewLanguages] = useState<Language[]>([]);
   const [error, setError] = useState<string>("");
-
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
   useEffect(() => {
     if (!loading && userData?.languages) {
@@ -73,10 +73,11 @@ const Language: React.FC = () => {
   // Handle form submission
   const handleSubmit = async () => {
     setError("");
-
+    setIsLoading(true)
     
     if (existingLanguages.length === 0 && newLanguages.length === 0) {
       setError("Please add a language");
+      setIsLoading(false)
       return;
     }
 
@@ -91,11 +92,13 @@ const Language: React.FC = () => {
 
     if (hasEmptyProficiency) {
       setError("Please select a proficiency level for all languages");
+      setIsLoading(false);
       return;
     }
 
     if(hasEmptyLanguage){
       setError("Please select a language.")
+      setIsLoading(false);
       return;
     }
     
@@ -107,6 +110,8 @@ const Language: React.FC = () => {
       }
     } catch (error: any) {
       setError(error.message);
+    }finally{
+      setIsLoading(false);
     }
   };
 
@@ -170,7 +175,7 @@ const Language: React.FC = () => {
         </Button>
       </Box>
 
-      <StepNavigation action={handleSubmit} />
+      <StepNavigation action={handleSubmit} isLoading={isLoading} />
     </Box>
   );
 };
