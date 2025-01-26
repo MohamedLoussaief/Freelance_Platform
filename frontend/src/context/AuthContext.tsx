@@ -1,6 +1,12 @@
 // AuthContext.tsx
-import { createContext, useReducer, Dispatch, useEffect, useContext } from 'react';
-import { useRefreshToken } from '../hooks/useRefreshToken';
+import {
+  createContext,
+  useReducer,
+  Dispatch,
+  useEffect,
+  useContext,
+} from "react";
+import { useRefreshToken } from "../hooks/useRefreshToken";
 
 interface AuthState {
   user: null | object | undefined;
@@ -22,19 +28,32 @@ export const AuthContext = createContext<AuthContextType>({
   dispatch: () => {},
 });
 
-export const authReducer = (state: AuthState, action: AuthAction): AuthState => {
+export const authReducer = (
+  state: AuthState,
+  action: AuthAction
+): AuthState => {
   switch (action.type) {
-    case 'LOGIN':
-      return { user: action.payload?.token ? { token: action.payload.token } : null, loading: false };
-    case 'LOGOUT':
+    case "LOGIN":
+      return {
+        user: action.payload?.token ? { token: action.payload.token } : null,
+        loading: false,
+      };
+    case "LOGOUT":
       return { user: null, loading: false };
     default:
       return state;
   }
 };
 
-export const AuthContextProvider = ({ children }: { children: React.ReactNode }) => {
-  const [state, dispatch] = useReducer(authReducer, { user: null, loading: true });
+export const AuthContextProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const [state, dispatch] = useReducer(authReducer, {
+    user: null,
+    loading: true,
+  });
   const { refreshToken } = useRefreshToken();
 
   useEffect(() => {
@@ -44,13 +63,13 @@ export const AuthContextProvider = ({ children }: { children: React.ReactNode })
         const refreshedToken = await refreshToken();
 
         if (refreshedToken) {
-          dispatch({ type: 'LOGIN', payload: { token: refreshedToken } });
+          dispatch({ type: "LOGIN", payload: { token: refreshedToken } });
         } else {
-          dispatch({ type: 'LOGOUT' });
+          dispatch({ type: "LOGOUT" });
         }
       } catch (error) {
-        console.error('Authentication error:', error);
-        dispatch({ type: 'LOGOUT' });
+        console.error("Authentication error:", error);
+        dispatch({ type: "LOGOUT" });
       }
     };
 
@@ -60,7 +79,7 @@ export const AuthContextProvider = ({ children }: { children: React.ReactNode })
     const refreshInterval = setInterval(async () => {
       const refreshedToken = await refreshToken();
       if (refreshedToken) {
-        dispatch({ type: 'LOGIN', payload: { token: refreshedToken } });
+        dispatch({ type: "LOGIN", payload: { token: refreshedToken } });
       }
     }, 15 * 60 * 1000);
 
@@ -78,7 +97,7 @@ export const useAuthContext = () => {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw Error('useAuthContext must be used inside an AuthContextProvider');
+    throw Error("useAuthContext must be used inside an AuthContextProvider");
   }
 
   return context;

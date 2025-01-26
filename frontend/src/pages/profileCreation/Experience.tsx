@@ -3,180 +3,150 @@ import NavBar from "../../components/organisms/NavBar";
 import StepNavigation from "../../components/molecules/StepNavigation";
 import { useState } from "react";
 import ExperiencePopup from "../../components/organisms/ExperiencePopup";
-import useUserData from "../../hooks/useUserData";
 import Card from "../../components/molecules/Card";
 import { remove } from "../../api/client";
 import { IExperience } from "../../types/models/User";
+import { useUser } from "../../context/UserContext";
 
+const Experience: React.FC = () => {
+  const { userData, fetchUserData, loading } = useUser();
+  const [action, setAction] = useState<"update" | "add">("add");
+  const [exp, setExp] = useState<IExperience>();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const handleOpenDialog = () => setIsDialogOpen(true);
+  const handleCloseDialog = () => setIsDialogOpen(false);
+  const [error, setError] = useState<string>("");
 
-const Experience:React.FC = ()=>{
+  const removeExperience = async (id: string) => {
+    setError("");
+    try {
+      await remove(`/profile/delete-experience/${id}`);
+      fetchUserData();
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
 
-const { userData, fetchUserData, loading } = useUserData(); 
-const [action, setAction] = useState<"update"|"add">("add");
-const [exp, setExp] = useState<IExperience>(); 
-const [isDialogOpen, setIsDialogOpen] = useState(false);
-const handleOpenDialog = () => setIsDialogOpen(true);
-const handleCloseDialog = () => setIsDialogOpen(false);
-const [error, setError] = useState<string>("")
-
-
-const removeExperience = async(id:string)=>{
-setError("");
-try{
-await remove(`/profile/delete-experience/${id}`)  
-fetchUserData();
-}catch(error:any){
-setError(error.message)
-}
-}
-
-
-
-
-
-return(
-<Box
-    sx={{
-    display: 'flex',
-    flexDirection: 'column', 
-    height: '95vh',
-      }}
->
-
-<NavBar/>
-
-
-<>
-      {/* Add Experience Section */}
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        gap={2}
-        p={4}
-        maxWidth="600px"
-        mx="auto"
-        textAlign="center"
-      >
-        
-        {/* Title */}
-        <Typography variant="h5" fontWeight="bold">
-          If you have relevant work experience, add it here.
-        </Typography>
-
-        {/* Subtitle */}
-        <Typography variant="body1" color="textSecondary">
-          Freelancers who add their experience are twice as likely to win work.
-          But if you’re just starting out, you can still create a great profile.
-          Just head on to the next page.
-        </Typography>
-
-      <Box
-      display="flex"
-      flexDirection="row"
-      flexWrap="nowrap" // Prevent wrapping to new lines
-      justifyContent="flex-start"
-      alignItems="flex-start"
-      gap={3} // Add space between items
-      p={3} // Padding for the container
+  return (
+    <Box
       sx={{
-        width: "100%", // Full width of the parent container
-        overflowX: "auto", // Horizontal scroll for overflow
-        borderRadius: "8px",
+        display: "flex",
+        flexDirection: "column",
+        height: "95vh",
       }}
-      >
+    >
+      <NavBar />
 
-      {/* Add Experience Card */}
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        border="1px dashed #ccc"
-        borderRadius="8px"
-        p={4}
-        width="300px" // Same width as the cards
-        height="120px"
-        sx={{
-          cursor: "pointer",
-          transition: "0.3s",
-          "&:hover": { backgroundColor: "#f9f9f9" },
-          flexShrink: 0, // Prevent shrinking
-        }}
-        onClick={()=>{handleOpenDialog();setAction("add")}}
-      >
-        <Typography variant="h5" fontWeight="bold" mt={1}>
-          +
-        </Typography>
-        <Typography variant="subtitle1" fontWeight="bold" mt={1}>
-          Add Experience
-        </Typography>
-      </Box>
+      <>
+        {/* Add Experience Section */}
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          gap={2}
+          p={4}
+          maxWidth="600px"
+          mx="auto"
+          textAlign="center"
+        >
+          {/* Title */}
+          <Typography variant="h5" fontWeight="bold">
+            If you have relevant work experience, add it here.
+          </Typography>
 
+          {/* Subtitle */}
+          <Typography variant="body1" color="textSecondary">
+            Freelancers who add their experience are twice as likely to win
+            work. But if you’re just starting out, you can still create a great
+            profile. Just head on to the next page.
+          </Typography>
 
-      {/* Experience Cards */}
-      {loading?<></>:userData.experience.map((exp: any) => (
-        <Card experience={exp} key={exp._id} 
-        removeExp={removeExperience}
-        expId={exp._id}
-        setExp={setExp}
-        setAction={setAction}
-        openDialog={handleOpenDialog}
+          <Box
+            display="flex"
+            flexDirection="row"
+            flexWrap="nowrap" // Prevent wrapping to new lines
+            justifyContent="flex-start"
+            alignItems="flex-start"
+            gap={3} // Add space between items
+            p={3} // Padding for the container
+            sx={{
+              width: "100%", // Full width of the parent container
+              overflowX: "auto", // Horizontal scroll for overflow
+              borderRadius: "8px",
+            }}
+          >
+            {/* Add Experience Card */}
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
+              border="1px dashed #ccc"
+              borderRadius="8px"
+              p={4}
+              width="300px" // Same width as the cards
+              height="120px"
+              sx={{
+                cursor: "pointer",
+                transition: "0.3s",
+                "&:hover": { backgroundColor: "#f9f9f9" },
+                flexShrink: 0, // Prevent shrinking
+              }}
+              onClick={() => {
+                handleOpenDialog();
+                setAction("add");
+              }}
+            >
+              <Typography variant="h5" fontWeight="bold" mt={1}>
+                +
+              </Typography>
+              <Typography variant="subtitle1" fontWeight="bold" mt={1}>
+                Add Experience
+              </Typography>
+            </Box>
+
+            {/* Experience Cards */}
+            {loading ? (
+              <></>
+            ) : (
+              userData.experience.map((exp: any) => (
+                <Card
+                  experience={exp}
+                  key={exp._id}
+                  removeExp={removeExperience}
+                  expId={exp._id}
+                  setExp={setExp}
+                  setAction={setAction}
+                  openDialog={handleOpenDialog}
+                />
+              ))
+            )}
+          </Box>
+
+          {/* Error Message */}
+          {error && (
+            <FormHelperText sx={{ color: "red" }}>{error}</FormHelperText>
+          )}
+        </Box>
+
+        {/* Add Experience Popup */}
+        <ExperiencePopup
+          isOpen={isDialogOpen}
+          onClose={handleCloseDialog}
+          onSave={fetchUserData}
+          action={action}
+          data={exp}
         />
-      ))}
-    </Box>
+      </>
 
-    {/* Error Message */}
-    {error && <FormHelperText sx={{color:"red"}}>{error}</FormHelperText>}
-
-      </Box>
-
-      {/* Add Experience Popup */}
-      <ExperiencePopup
-        isOpen={isDialogOpen}
-        onClose={handleCloseDialog}
-        onSave={fetchUserData}
-        action={action}
-        data={exp}
+      <StepNavigation
+        action={() => {
+          return true;
+        }}
       />
-</>
-
-
-<StepNavigation action={()=>{return true}} />
-
-
-</Box>
-)
-
-
-}
-
+    </Box>
+  );
+};
 
 export default Experience;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
