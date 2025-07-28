@@ -4,8 +4,8 @@ import {
   refresh,
   logout,
   signUp,
-  emailCode,
-  verifyCode,
+  emailToken,
+  verifyToken,
   resetPassword,
 } from "../controllers/auth";
 
@@ -19,13 +19,9 @@ router.get("/refresh", refresh);
 
 router.get("/logout", logout);
 
-router.post("/email-activation", emailCode);
+router.post("/email-link", emailToken);
 
-router.post("/email-forget-password", emailCode);
-
-router.post("/activate-account", verifyCode);
-
-router.post("/forget-password", verifyCode);
+router.get("/verify-token/:type/:token", verifyToken);
 
 router.post("/reset-password", resetPassword);
 

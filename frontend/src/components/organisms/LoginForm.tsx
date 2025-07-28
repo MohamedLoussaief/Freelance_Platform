@@ -22,9 +22,8 @@ const LoginForm = () => {
   });
   const { dispatch } = useAuthContext();
   const [error, setError] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
-
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -38,26 +37,24 @@ const LoginForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-  
+
     try {
       if (formData.email.trim() === "" || formData.password.trim() === "") {
         setError("All fields are required.");
-        setIsLoading(false); 
+        setIsLoading(false);
         return;
       }
-  
-      
+
       const { showPassword, ...loginData } = formData;
-  
+
       const token = await login(loginData);
       if (token) {
-        console.log(token)
-        dispatch({ type: "LOGIN", payload: {token:token} });
+        dispatch({ type: "LOGIN", payload: { token: token } });
         navigate("/");
       }
     } catch (error: any) {
-      setError(error.response?.data?.message );
-      console.error(error)
+      setError(error.response?.data?.message);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -91,40 +88,37 @@ const LoginForm = () => {
           sx={{ mb: 2 }}
         />
 
-
-
         <TextField
           label="Password"
           variant="outlined"
           size="small"
           name="password"
-          type={formData.showPassword ? "text" : "password"}
+          type={formData.showPassword ? "password" : "text"}
           value={formData.password}
           onChange={handleChange}
           error={!!error}
           fullWidth
           sx={{ mb: 2 }}
           slotProps={{
-            input:{ 
-            endAdornment: (
-              <InputAdornment position="end">
-                {formData.showPassword ? (
-                  <VisibilityOff
-                    sx={{ cursor: "pointer" }}
-                    onClick={togglePasswordVisibility}
-                  />
-                ) : (
-                  <Visibility
-                    sx={{ cursor: "pointer" }}
-                    onClick={togglePasswordVisibility}
-                  />
-                )}
-              </InputAdornment>
-            ),
-         }
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  {formData.showPassword ? (
+                    <VisibilityOff
+                      sx={{ cursor: "pointer" }}
+                      onClick={togglePasswordVisibility}
+                    />
+                  ) : (
+                    <Visibility
+                      sx={{ cursor: "pointer" }}
+                      onClick={togglePasswordVisibility}
+                    />
+                  )}
+                </InputAdornment>
+              ),
+            },
           }}
         />
-
 
         <Button
           type="submit"
@@ -146,8 +140,14 @@ const LoginForm = () => {
             "Log In"
           )}
         </Button>
-      {/* Error Message */}
-      {error && <FormHelperText sx={{color:"red", textAlign:"center", fontSize:"15px"}}>{error}</FormHelperText>}
+        {/* Error Message */}
+        {error && (
+          <FormHelperText
+            sx={{ color: "red", textAlign: "center", fontSize: "15px" }}
+          >
+            {error}
+          </FormHelperText>
+        )}
         <Typography textAlign="center" variant="body2">
           Don't have an account?{" "}
           <Typography
@@ -156,6 +156,9 @@ const LoginForm = () => {
               color: "#108a00",
               textDecoration: "underline",
               cursor: "pointer",
+            }}
+            onClick={() => {
+              navigate("/signup");
             }}
           >
             Sign Up

@@ -1,16 +1,14 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { Types } from "mongoose";
-import { UserType } from "../models/user";
 
 interface DecodedToken extends JwtPayload {
-  _id: Types.ObjectId;
-  userType: UserType;
+  id: string;
+  userType: string;
 }
 
 export const createToken = (
-  { _id, userType }: DecodedToken,
+  { id, userType }: DecodedToken,
   expireDate: string,
   secret: string
 ) => {
-  return jwt.sign({ _id, userType }, secret, { expiresIn: expireDate });
+  return jwt.sign({ id, userType }, secret, { expiresIn: expireDate });
 };

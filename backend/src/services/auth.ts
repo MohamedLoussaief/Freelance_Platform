@@ -1,122 +1,133 @@
-import User from "../models/user";
+import { User } from "../entities/user";
 import bcrypt from "bcrypt";
-import { Types } from "mongoose";
 import { createToken } from "../utils/createToken";
 import { emailContent } from "../utils/emailContent";
 import transporter from "../utils/emailSender";
 import CustomError from "../utils/CustomError";
+import { CreateUserDto } from "../dtos/create-user.dto";
+import { AppDataSource } from "../data-source";
+import { Freelancer } from "../entities/freelancer";
+import { Client } from "../entities/client";
+import crypto from "crypto";
 
-interface SignUpData {
-  userType: string;
-  firstName: string;
-  lastName: string;
-  country: string;
-  companyName?: string;
-  email: string;
-  password: string;
-}
+const userRepository = AppDataSource.getRepository(User);
+const clientRepository = AppDataSource.getRepository(Client);
+const freelancerRepository = AppDataSource.getRepository(Freelancer);
 
 export const loginService = async (email: string, password: string) => {
-  const userExist = await User.findOne({ email });
-
-  if (!userExist) {
-    throw new CustomError("Incorrect email", 400);
-  }
-
-  const match = await bcrypt.compare(password, userExist.password);
-
-  if (!match) {
-    throw new CustomError("Incorrect password", 400);
-  }
-
-  const token = createToken(
-    { _id: userExist._id as Types.ObjectId, userType: userExist.userType },
-    "1h",
-    process.env.ACCESS_TOKEN_SECRET as string
-  );
-
-  return { token, userExist };
-};
-
-export const refreshService = async (id: string) => {
-  const foundUser = await User.findOne({ _id: id }).exec();
-  return foundUser;
-};
-
-export const signUpService = async (data: SignUpData) => {
-  const {
-    userType,
-    firstName,
-    lastName,
-    country,
-    companyName,
-    email,
-    password,
-  } = data;
-
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    throw new CustomError("This email is already in use", 409);
-  }
-
-  const newUser = await User.create({
-    userType,
-    firstName,
-    lastName,
-    companyName: userType === "Client" ? companyName : null,
-    email,
-    country,
-    password: password,
+  const user = await userRepository.findOne({
+    where: { email },
+    select: ["id", "email", "password"],
   });
 
+  if (!user) {
+    throw new CustomError("Invalid credentials", 400);
+  }
+
+  const match = await bcrypt.compare(password, user.password);
+
+  if (!match) {
+    throw new CustomError("Invalid credentials", 400);
+  }
+
+  const isClient = await clientRepository.findOne({
+    where: { user },
+  });
+
+  const userType = isClient ? "Client" : "Freelancer";
+
   const token = createToken(
-    { _id: newUser._id as Types.ObjectId, userType: newUser.userType },
+    { id: user.id, userType: userType },
     "15m",
     process.env.ACCESS_TOKEN_SECRET as string
   );
 
+  return { token, user: { id: user.id, email: user.email, userType } };
+};
+
+export const refreshService = async (id: string) => {
+  const user = await userRepository.findOne({ where: { id } });
+  if (!user) {
+    throw new CustomError("User not found", 404);
+  }
+  const isClient = await clientRepository.findOne({
+    where: { user },
+  });
+  const userType = isClient ? "Client" : "Freelancer";
+  return { user, userType };
+};
+
+export const signUpService = async (dto: CreateUserDto) => {
+  const existingUser = await userRepository.findOne({
+    where: { email: dto.email },
+  });
+  if (existingUser) {
+    throw new CustomError("This email is already in use", 409);
+  }
+
+  const user = new User();
+
+  Object.assign(user, dto);
+
+  user.password = await bcrypt.hash(dto.password, 12);
+
+  const savedUser = await userRepository.save(user);
+
+  const token = createToken(
+    { id: savedUser.id, userType: dto.userType },
+    "15m",
+    process.env.ACCESS_TOKEN_SECRET as string
+  );
+
+  if (dto.userType === "Client") {
+    const client = new Client();
+    Object.assign(client, dto);
+    client.user = savedUser;
+    await clientRepository.save(client);
+  } else if (dto.userType === "Freelancer") {
+    const freelancer = new Freelancer();
+    freelancer.user = savedUser;
+    await freelancerRepository.save(freelancer);
+  }
+
   return {
-    user: {
-      id: newUser._id,
-      userType: newUser.userType,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName,
-      email: newUser.email,
-      country: newUser.country,
-    },
+    savedUser,
     token,
   };
 };
 
-export const sendEmailCode = async (email: string, path: string) => {
+export const sendEmailToken = async (
+  email: string,
+  type: "verify" | "reset"
+) => {
   // Generate a six-digit code
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const codeExpires = Date.now() + 3600000; // One hour from now
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiry = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
 
-  const user = await User.findOneAndUpdate(
-    { email },
-    { code, codeExpires },
-    { new: true }
-  );
+  const user = await userRepository.findOne({ where: { email } });
 
   if (!user) {
-    const error = new Error("User with provided email not found") as Error & {
-      status: number;
-    };
-    error.status = 404;
-    throw error;
+    throw new CustomError("User not found", 404);
   }
+
+  if (!type) {
+    throw new CustomError("Please provide token type", 404);
+  }
+
+  user.token = token;
+  user.tokenExpiry = expiry;
+  user.tokenType = type;
+
+  await userRepository.save(user);
 
   // Configure email options
   const subject =
-    path === "/email-activation"
-      ? "Account Activation Code"
-      : "Forgot Password";
+    user.tokenType === "verify" ? "Account Activation" : "Forgot Password";
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
     subject,
-    html: emailContent(code, path, user.firstName),
+    html: emailContent(token, user.tokenType, user.firstName),
   };
 
   // Send the email
@@ -134,79 +145,51 @@ export const sendEmailCode = async (email: string, path: string) => {
   });
 
   return `Check your email for ${
-    path === "/emailActivation" ? "the activation" : "the forgot password"
-  } code.`;
+    user.tokenType === "verify" ? "the activation" : "the forgot password"
+  } link.`;
 };
 
-export const verifyUserCode = async (
-  email: string,
-  code: number,
-  action: "activateAccount" | "forgotPassword"
-) => {
-  if (!email) {
-    throw new CustomError("Please provide the email address", 400);
+export const verifyTokenService = async (type: string, token: string) => {
+  const user = await userRepository.findOne({
+    where: { token, tokenType: type },
+  });
+
+  if (!user || !user.tokenExpiry || user.tokenExpiry < new Date()) {
+    throw new CustomError("Invalid or expired token", 400);
   }
 
-  if (!code) {
-    throw new CustomError("Please provide the code", 400);
+  if (type === "verify") {
+    user.verified = true;
+    user.token = null;
+    user.tokenType = null;
+    user.tokenExpiry = null;
+    await userRepository.save(user);
   }
 
-  const user = await User.findOne({ email });
+  const msg =
+    type === "verify"
+      ? "Account verified!"
+      : "Token is valid for password reset";
 
-  if (!user) {
-    throw new CustomError("User email not found", 400);
-  }
-
-  if (user.code !== code) {
-    throw new CustomError(
-      `Invalid ${
-        action === "activateAccount" ? "activation" : "forgot password"
-      } code`,
-      400
-    );
-  }
-
-  if (user.codeExpires && user.codeExpires < Date.now()) {
-    throw new CustomError(
-      `Expired ${
-        action === "activateAccount" ? "activation" : "forgot password"
-      } code`,
-      400
-    );
-  }
-
-  if (action === "activateAccount") {
-    user.isActive = true;
-  }
-
-  user.code = undefined;
-  user.codeExpires = undefined;
-
-  await user.save();
-
-  return action === "activateAccount"
-    ? "Account activated successfully"
-    : "You can now reset your password";
+  return msg;
 };
 
-export const resetUserPassword = async (email: string, newPassword: string) => {
-  if (!email) {
-    throw new CustomError("Email is required", 400);
+export const resetUserPassword = async (token: string, newPassword: string) => {
+  const user = await userRepository.findOne({
+    where: { token, tokenType: "reset" },
+  });
+
+  if (!user || !user.tokenExpiry || user.tokenExpiry < new Date()) {
+    throw new CustomError("Invalid or expired token", 400);
   }
 
-  if (!newPassword) {
-    throw new CustomError("Please provide a new password", 400);
-  }
+  user.password = await bcrypt.hash(newPassword, 12);
 
-  const user = await User.findOne({ email });
+  user.token = null;
+  user.tokenType = null;
+  user.tokenExpiry = null;
 
-  if (!user) {
-    throw new CustomError("User with the specified email was not found", 404);
-  }
+  await userRepository.save(user);
 
-  user.password = newPassword;
-
-  await user.save();
-
-  return { msg: "The password has been changed successfully" };
+  return "Password reset successfully";
 };

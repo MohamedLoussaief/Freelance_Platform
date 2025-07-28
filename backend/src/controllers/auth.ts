@@ -3,13 +3,16 @@ import {
   loginService,
   refreshService,
   resetUserPassword,
-  sendEmailCode,
+  sendEmailToken,
   signUpService,
-  verifyUserCode,
+  verifyTokenService,
 } from "../services/auth";
 import { createToken } from "../utils/createToken";
-import { Types } from "mongoose";
 import jwt, { VerifyErrors } from "jsonwebtoken";
+import { CreateUserDto } from "../dtos/create-user.dto";
+import { validate } from "class-validator";
+import { formatValidationErrors } from "../utils/formatValidationErrors";
+import CustomError from "../utils/CustomError";
 
 const loginUser = async (
   req: Request,
@@ -24,13 +27,12 @@ const loginUser = async (
       return;
     }
 
-    // service that returns {token, user}
     const login = await loginService(email, password);
 
-    const user = login.userExist;
+    const user = login.user;
 
     const refreshToken = createToken(
-      { _id: user._id as Types.ObjectId, userType: user.userType },
+      { id: user.id, userType: user.userType },
       "7d",
       process.env.REFRESH_TOKEN_SECRET as string
     );
@@ -58,10 +60,27 @@ const signUp = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { user, token } = await signUpService(req.body);
+    const dto = Object.assign(new CreateUserDto(), req.body);
+
+    if (dto.userType !== "Freelancer" && dto.userType !== "Client") {
+      throw new CustomError("Please provide a valid user type", 400);
+    }
+
+    const errors = await validate(dto);
+
+    if (errors.length > 0) {
+      res.status(400).json({
+        status: "error",
+        message: "Validation failed",
+        errors: formatValidationErrors(errors),
+      });
+      return;
+    }
+
+    const { savedUser, token } = await signUpService(dto);
 
     const refreshToken = createToken(
-      { _id: user.id as Types.ObjectId, userType: user.userType },
+      { id: savedUser.id, userType: dto.userType },
       "7d",
       process.env.REFRESH_TOKEN_SECRET as string
     );
@@ -74,9 +93,14 @@ const signUp = async (
       maxAge: 7 * 24 * 60 * 60 * 1000, //cookie expiry: set to match refresh Token
     });
 
-    res
-      .status(201)
-      .json({ message: "User registered successfully", user, token });
+    const { id, firstName, lastName, email } = savedUser;
+
+    res.status(201).json({
+      status: "success",
+      message: "User registered successfully",
+      user: { id, firstName, lastName, email },
+      token,
+    });
   } catch (error: any) {
     next(error);
   }
@@ -101,15 +125,15 @@ const refresh = async (req: Request, res: Response): Promise<void> => {
         return;
       }
 
-      const foundUser = await refreshService(decoded._id);
+      const { user, userType } = await refreshService(decoded.id);
 
-      if (!foundUser) {
+      if (!user) {
         res.status(401).json({ message: "Unauthorized" });
         return;
       }
 
       const token = createToken(
-        { _id: foundUser._id as Types.ObjectId, userType: foundUser.userType },
+        { id: user.id, userType: userType },
         "1h",
         process.env.ACCESS_TOKEN_SECRET as string
       );
@@ -130,9 +154,10 @@ const logout = async (req: Request, res: Response): Promise<void> => {
   res.json({ message: "Cookie cleared" });
 };
 
-// Sending a verification code email
-const emailCode = async (req: Request, res: Response) => {
+// Sending a verification token email
+const emailToken = async (req: Request, res: Response, next: NextFunction) => {
   const { email } = req.body;
+  const { type } = req.body;
 
   if (!email) {
     res.status(400).json({ msg: "Email is required" });
@@ -140,25 +165,20 @@ const emailCode = async (req: Request, res: Response) => {
   }
 
   try {
-    const responseMessage = await sendEmailCode(email, req.path);
-
+    const responseMessage = await sendEmailToken(email, type);
     res.status(201).json({ msg: responseMessage });
   } catch (error: any) {
-    res
-      .status(error.status || 500)
-      .json({ msg: error.message || "Server error" });
+    next(error);
   }
 };
 
-const verifyCode = async (req: Request, res: Response, next: NextFunction) => {
-  const { email, code } = req.body;
+const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
+  const { type, token } = req.params;
 
   try {
-    const action =
-      req.path === "/activateAccount" ? "activateAccount" : "forgotPassword";
-    const message = await verifyUserCode(email, code, action);
+    const responseMessage = await verifyTokenService(type, token);
 
-    res.status(200).json({ msg: message });
+    res.status(200).json({ msg: responseMessage });
   } catch (error: any) {
     next(error);
   }
@@ -169,10 +189,11 @@ const resetPassword = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { email, newPassword } = req.body;
+  const { newPassword } = req.body;
+  const { token } = req.body;
 
   try {
-    const message = await resetUserPassword(email, newPassword);
+    const message = await resetUserPassword(token, newPassword);
 
     res.status(200).json({ msg: message });
   } catch (error: any) {
@@ -185,7 +206,7 @@ export {
   refresh,
   logout,
   signUp,
-  emailCode,
-  verifyCode,
+  emailToken,
   resetPassword,
+  verifyToken,
 };

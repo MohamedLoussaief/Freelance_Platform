@@ -1,43 +1,51 @@
-import express from "express";
-import mongoose from "mongoose";
+import "reflect-metadata";
+import express, { Application } from "express";
 import dotenv from "dotenv";
+import { AppDataSource } from "./data-source";
 import authRoutes from "./routes/auth";
-import userRoutes from "./routes/user";
-import portfolioRoutes from "./routes/portfolio";
-import projectRoutes from "./routes/project";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler";
 import cors from "cors";
+import { ApolloServer } from "apollo-server-express";
+import { typeDefs, resolvers } from "./graphql";
+import { context } from "./graphql/context";
+import { Any } from "typeorm";
 
-dotenv.config();
+const startServer = async () => {
+  dotenv.config();
 
-const app = express();
+  const app = express();
 
-app.use(express.json());
-app.use(cookieParser());
+  app.use(express.json());
+  app.use(cookieParser());
 
-app.use(cors({ origin: process.env.CLIENT, credentials: true }));
+  app.use(cors({ origin: process.env.CLIENT, credentials: true }));
 
-// routes
-app.use("/auth", authRoutes);
-app.use("/profile", userRoutes);
-app.use("/portfolio", portfolioRoutes);
-app.use("/project", projectRoutes);
+  // routes
+  app.use("/api/auth", authRoutes);
 
-// error handler middleware
-app.use(errorHandler);
+  // error handler middleware
+  app.use(errorHandler);
 
-// Connect to db
-mongoose
-  .connect(process.env.DB_URL as string)
-  .then(() => {
-    console.log("Connected to the database succefully");
-  })
-  .catch((error) => {
-    console.log("error with connecting", error);
+  // Create Apollo Server
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context,
   });
 
-// Server listening
-app.listen(process.env.PORT, () => {
-  console.log(`I'm listening in port 9090`);
+  await server.start();
+  server.applyMiddleware({ app: app as any, path: "/graphql" });
+
+  // Initialize TypeORM connection
+  await AppDataSource.initialize();
+
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server is running in port ${PORT}`);
+  });
+};
+
+startServer().catch((err) => {
+  console.error("Failed to start server:", err);
 });
