@@ -7,9 +7,9 @@ import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler";
 import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
-import { typeDefs, resolvers } from "./graphql";
 import { context } from "./graphql/context";
-import { Any } from "typeorm";
+import { buildSchema } from "type-graphql";
+import { FreelancerResolver } from "./graphql/resolvers/freelancer.resolver";
 
 const startServer = async () => {
   dotenv.config();
@@ -27,10 +27,18 @@ const startServer = async () => {
   // error handler middleware
   app.use(errorHandler);
 
+  // Create Schema
+  const schema = await buildSchema({
+    resolvers: [FreelancerResolver],
+    authChecker: ({ context }) => {
+      return !!context.user;
+    },
+    validate: true,
+  });
+
   // Create Apollo Server
   const server = new ApolloServer({
-    typeDefs,
-    resolvers,
+    schema,
     context,
   });
 

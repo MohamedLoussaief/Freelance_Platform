@@ -1,4 +1,4 @@
-import { User } from "../entities/user";
+import { User } from "../entities/user.entity";
 import bcrypt from "bcrypt";
 import { createToken } from "../utils/createToken";
 import { emailContent } from "../utils/emailContent";
@@ -6,8 +6,8 @@ import transporter from "../utils/emailSender";
 import CustomError from "../utils/CustomError";
 import { CreateUserDto } from "../dtos/create-user.dto";
 import { AppDataSource } from "../data-source";
-import { Freelancer } from "../entities/freelancer";
-import { Client } from "../entities/client";
+import { Freelancer } from "../entities/freelancer.entity";
+import { Client } from "../entities/client.entity";
 import crypto from "crypto";
 
 const userRepository = AppDataSource.getRepository(User);

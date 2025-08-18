@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Freelancer } from "./freelancer";
+import { Freelancer } from "./freelancer.entity";
 
 @Entity()
 export class Skill {

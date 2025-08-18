@@ -1,11 +1,5 @@
-import {
-  Column,
-  Entity,
-  ManyToMany,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from "typeorm";
-import { Freelancer } from "./freelancer";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Freelancer } from "./freelancer.entity";
 
 @Entity()
 export class Experience {
@@ -21,14 +15,14 @@ export class Experience {
   @Column()
   currentlyWorking!: string;
 
-  @Column()
+  @Column({ type: "timestamp" })
   startDate!: Date;
 
-  @Column()
-  endDate!: Date;
+  @Column({ type: "timestamp", nullable: true })
+  endDate?: Date | null;
 
   @Column()
-  Description!: string;
+  description!: string;
 
   @ManyToOne(() => Freelancer, (freelancer) => freelancer.experienceList)
   freelancer!: Freelancer;

@@ -24,8 +24,8 @@ export class CreateUserDto {
   @IsNotEmpty({ message: "Please select your country" })
   country!: string;
 
-  @IsNotEmpty({ message: "Company name is required" })
-  companyName!: string;
+  @IsOptional()
+  companyName?: string;
 
   @IsOptional()
   picture?: string;

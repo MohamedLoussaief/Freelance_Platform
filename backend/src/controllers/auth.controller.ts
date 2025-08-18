@@ -6,7 +6,7 @@ import {
   sendEmailToken,
   signUpService,
   verifyTokenService,
-} from "../services/auth";
+} from "../services/auth.service";
 import { createToken } from "../utils/createToken";
 import jwt, { VerifyErrors } from "jsonwebtoken";
 import { CreateUserDto } from "../dtos/create-user.dto";

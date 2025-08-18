@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Freelancer } from "./freelancer";
+import { Freelancer } from "./freelancer.entity";
 
 @Entity()
 export class Language {
@@ -11,6 +11,9 @@ export class Language {
 
   @Column()
   name!: string;
+
+  @Column()
+  level!: string;
 
   @ManyToMany(() => Freelancer, (freelancer) => freelancer.languages)
   freelancers!: Freelancer[];

@@ -8,11 +8,11 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { User } from "./user";
-import { Skill } from "./skill";
-import { Language } from "./language";
-import { Education } from "./education";
-import { Experience } from "./experience";
+import { User } from "./user.entity";
+import { Skill } from "./skill.entity";
+import { Language } from "./language.entity";
+import { Education } from "./education.entity";
+import { Experience } from "./experience.entity";
 
 @Entity()
 export class Freelancer {
@@ -32,7 +32,9 @@ export class Freelancer {
   @JoinColumn()
   user!: User;
 
-  @ManyToMany(() => Skill, (skill) => skill.freelancers)
+  @ManyToMany(() => Skill, (skill) => skill.freelancers, {
+    cascade: true,
+  })
   @JoinTable()
   skills!: Skill[];
 
@@ -40,9 +42,13 @@ export class Freelancer {
   @JoinTable()
   languages!: Language[];
 
-  @OneToMany(() => Education, (education) => education.freelancer)
+  @OneToMany(() => Education, (education) => education.freelancer, {
+    cascade: true,
+  })
   educationList!: Education[];
 
-  @OneToMany(() => Experience, (experience) => experience.freelancer)
+  @OneToMany(() => Experience, (experience) => experience.freelancer, {
+    cascade: true,
+  })
   experienceList!: Experience[];
 }

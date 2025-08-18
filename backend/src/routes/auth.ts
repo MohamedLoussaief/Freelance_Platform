@@ -7,7 +7,7 @@ import {
   emailToken,
   verifyToken,
   resetPassword,
-} from "../controllers/auth";
+} from "../controllers/auth.controller";
 
 const router = Router();
 
