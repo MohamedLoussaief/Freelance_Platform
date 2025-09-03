@@ -6,7 +6,7 @@ export const useRefreshToken = () => {
       const response = await fetchToken();
       return response || null;
     } catch (error) {
-      console.error("Failed to refresh token:", error);
+      //console.error("Failed to refresh token:", error);
       return null;
     }
   };

@@ -5,7 +5,7 @@ import { baseURL, get, update } from "../api/client";
 const signup = async (userData: User) => {
   try {
     const response = await axios.post(
-      `${baseURL}/auth/signup`,
+      `${baseURL}/api/auth/signup`,
       {
         ...userData,
       },
@@ -23,7 +23,7 @@ const signup = async (userData: User) => {
 const login = async (data: any) => {
   try {
     const response = await axios.post(
-      `${baseURL}/auth/login`,
+      `${baseURL}/api/auth/login`,
       { ...data },
       {
         withCredentials: true, // Allow cookies to be sent
@@ -33,6 +33,28 @@ const login = async (data: any) => {
     if (response.status === 200) {
       return response.data.token;
     }
+  } catch (error: any) {
+    throw error;
+  }
+};
+
+const emailSend = async (email: string, type: string) => {
+  try {
+    await axios.post(`${baseURL}/api/auth/email-link`, {
+      email,
+      type,
+    });
+  } catch (error: any) {
+    throw error;
+  }
+};
+
+const verifyToken = async (type: string, token: string) => {
+  try {
+    const response = await get(
+      `${baseURL}/api/auth/verify-token/${type}/${token}`
+    );
+    return response.msg;
   } catch (error: any) {
     throw error;
   }
@@ -50,7 +72,7 @@ const getUserData = async () => {
 
 const logout = async () => {
   try {
-    const response = await axios.get(`${baseURL}/auth/logout`, {
+    const response = await axios.get(`${baseURL}/api/auth/logout`, {
       withCredentials: true,
     });
     if (response) {
@@ -71,4 +93,12 @@ const fieldOfWork = async (service: string) => {
   }
 };
 
-export { signup, fieldOfWork, getUserData, logout, login };
+export {
+  signup,
+  fieldOfWork,
+  getUserData,
+  logout,
+  login,
+  emailSend,
+  verifyToken,
+};

@@ -1,12 +1,18 @@
 import React, { useState } from "react";
-import { TextField, MenuItem, Box, Select, InputAdornment, SelectChangeEvent } from "@mui/material";
+import {
+  TextField,
+  MenuItem,
+  Box,
+  Select,
+  InputAdornment,
+  SelectChangeEvent,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
 const SearchBarWithFilter: React.FC = () => {
-  const [filter, setFilter] = useState("Talents"); 
+  const [filter, setFilter] = useState("Talents");
   const [searchTerm, setSearchTerm] = useState("");
 
-  
   const handleFilterChange = (event: SelectChangeEvent<string>) => {
     setFilter(event.target.value);
   };
@@ -20,7 +26,7 @@ const SearchBarWithFilter: React.FC = () => {
       sx={{
         display: "flex",
         alignItems: "center",
-        gap: 2, 
+        gap: 2,
       }}
     >
       {/* Search Bar */}
@@ -52,19 +58,19 @@ const SearchBarWithFilter: React.FC = () => {
                   sx={{
                     height: "100%",
                     backgroundColor: "transparent",
-                    color: "black", 
-                    paddingTop:"5px",
-                    borderRadius: "4px", 
-                    border: "none", 
+                    color: "black",
+                    paddingTop: "5px",
+                    borderRadius: "4px",
+                    border: "none",
                     textTransform: "none",
                     "&:focus": {
                       outline: "none",
                     },
 
                     "& .MuiSelect-icon": {
-                      marginTop: "-1px", 
+                      marginTop: "-1px",
                     },
-                    cursor: "pointer", 
+                    cursor: "pointer",
                   }}
                   disableUnderline
                 >

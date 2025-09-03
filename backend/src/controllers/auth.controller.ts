@@ -133,8 +133,13 @@ const refresh = async (req: Request, res: Response): Promise<void> => {
       }
 
       const token = createToken(
-        { id: user.id, userType: userType },
-        "1h",
+        {
+          id: user.id,
+          userType: userType,
+          email: user.email,
+          verified: user.verified,
+        },
+        "15m",
         process.env.ACCESS_TOKEN_SECRET as string
       );
 

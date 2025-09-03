@@ -18,7 +18,7 @@ const LoginForm = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    showPassword: false,
+    showPassword: true,
   });
   const { dispatch } = useAuthContext();
   const [error, setError] = useState<string>("");
@@ -54,7 +54,7 @@ const LoginForm = () => {
       }
     } catch (error: any) {
       setError(error.response?.data?.message);
-      console.error(error);
+      //console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +65,7 @@ const LoginForm = () => {
       sx={{
         maxWidth: 400,
         mx: "auto",
-        mt: 5,
+        mt: 20,
         p: 3,
         border: "1px solid #e0e0e0",
         borderRadius: 2,
@@ -85,7 +85,9 @@ const LoginForm = () => {
           onChange={handleChange}
           error={!!error}
           fullWidth
-          sx={{ mb: 2 }}
+          sx={{
+            mb: 2,
+          }}
         />
 
         <TextField

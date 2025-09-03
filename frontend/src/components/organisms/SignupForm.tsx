@@ -9,30 +9,31 @@ import {
   Typography,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import {UserType} from "../../types/models/User";
+import { UserType } from "../../types/models/User";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { getNames } from "country-list";
-import { signup } from "../../services/userService";
+import { emailSend, signup } from "../../services/userService";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../context/AuthContext";
-
-
-
 
 // Validation schema
 const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
-  password: z.string()
-  .min(6, "Password must be at least 6 characters")
-  .max(20, "Password must not exceed 20 characters")
-  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-  .regex(/\d/, "Password must contain at least one digit")
-  .regex(/[!@#$%^&*(),.?":{}|<>]/, "Password must contain at least one special character"),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters")
+    .max(20, "Password must not exceed 20 characters")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/\d/, "Password must contain at least one digit")
+    .regex(
+      /[!@#$%^&*(),.?":{}|<>]/,
+      "Password must contain at least one special character"
+    ),
   country: z.string().min(1, "Please select a country"),
   companyName: z.string().optional(),
   userType: z.string(),
@@ -41,11 +42,11 @@ const signupSchema = z.object({
 
 type SignupFormData = z.infer<typeof signupSchema>;
 
-
-const SignupForm: React.FC<{selectedRole:UserType|undefined, 
-  setSuccess:(s:boolean)=>void}> = ({selectedRole, setSuccess}) => {
-
-  const { dispatch } = useAuthContext();  
+const SignupForm: React.FC<{
+  selectedRole: UserType | undefined;
+  setSuccess: (s: boolean) => void;
+}> = ({ selectedRole, setSuccess }) => {
+  const { dispatch } = useAuthContext();
   const navigate = useNavigate();
 
   const {
@@ -69,10 +70,9 @@ const SignupForm: React.FC<{selectedRole:UserType|undefined,
     },
   });
 
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const countries = getNames(); 
-
+  const countries = getNames();
 
   const showPassword = watch("showPassword");
 
@@ -80,34 +80,39 @@ const SignupForm: React.FC<{selectedRole:UserType|undefined,
     setValue("showPassword", !showPassword);
   };
 
-  const onSubmit = async(data: SignupFormData) => {
+  const onSubmit = async (data: SignupFormData) => {
     //console.log("Form Submitted:", data);
-    setIsLoading(true)
-    try{
-     const res = await signup(data)
-  if(res){
-    dispatch({ type: "LOGIN", payload: {token:res} });
-    setSuccess(true)
-     }
-
-    }catch(error:any){
-      if(error.response?.status === 409){
+    setIsLoading(true);
+    try {
+      const res = await signup(data);
+      if (res) {
+        dispatch({ type: "LOGIN", payload: { token: res } });
+        setSuccess(true);
+        try {
+          await emailSend(data.email, "verify");
+        } catch (error: any) {
+          //console.error("Email sending failed:", error);
+          return;
+        }
+      }
+    } catch (error: any) {
+      if (error.response?.status === 409) {
         setError("email", {
           type: "server",
           message: error.response.data.message,
-        })
+        });
       }
-    }finally{
-      setIsLoading(false)
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-<Box
+    <Box
       sx={{
         maxWidth: 500,
         mx: "auto",
-        mt: 5,
+        mt: 15,
         p: 3,
         border: "1px solid #e0e0e0",
         borderRadius: 2,
@@ -207,22 +212,22 @@ const SignupForm: React.FC<{selectedRole:UserType|undefined,
               sx={{ mb: 2 }}
               slotProps={{
                 input: {
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {!showPassword ? (
-                      <VisibilityOff
-                        sx={{ cursor: "pointer" }}
-                        onClick={togglePasswordVisibility}
-                      />
-                    ) : (
-                      <Visibility
-                        sx={{ cursor: "pointer" }}
-                        onClick={togglePasswordVisibility}
-                      />
-                    )}
-                  </InputAdornment>
-                ),
-               }
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      {!showPassword ? (
+                        <VisibilityOff
+                          sx={{ cursor: "pointer" }}
+                          onClick={togglePasswordVisibility}
+                        />
+                      ) : (
+                        <Visibility
+                          sx={{ cursor: "pointer" }}
+                          onClick={togglePasswordVisibility}
+                        />
+                      )}
+                    </InputAdornment>
+                  ),
+                },
               }}
             />
           )}
@@ -243,18 +248,16 @@ const SignupForm: React.FC<{selectedRole:UserType|undefined,
               fullWidth
               sx={{ mb: 2 }}
             >
-              {countries.map(
-                (country:any) => (
-                  <MenuItem key={country} value={country}>
-                    {country}
-                  </MenuItem>
-                )
-              )}
+              {countries.map((country: any) => (
+                <MenuItem key={country} value={country}>
+                  {country}
+                </MenuItem>
+              ))}
             </TextField>
           )}
         />
 
-     <Button
+        <Button
           type="submit"
           variant="contained"
           fullWidth

@@ -7,11 +7,14 @@ import CreateProfile from "./CreateProfile";
 import useDecodedToken from "../hooks/useDecodedToken";
 import { useAuthContext } from "../context/AuthContext";
 import NotFoundPage from "../pages/NotFound";
+import VerifyEmail from "../pages/VerifyEmail";
+import ActivateRedirect from "../pages/ActivateRedirect";
 
 const AppRoutes: React.FC = () => {
   const { user, loading } = useAuthContext();
   const decodedToken = useDecodedToken();
   const userType = decodedToken?.userType;
+  const verified = decodedToken?.verified;
 
   if (loading) {
     return <></>;
@@ -20,8 +23,16 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route
+        path="/verify-email"
+        element={user && !verified ? <VerifyEmail /> : <Navigate to="/" />}
+      />
+      <Route path="/activate-account/:token" element={<ActivateRedirect />} />
       <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-      <Route path="/signup" element={<Signup />} />
+      <Route
+        path="/signup"
+        element={!user ? <Signup /> : <Navigate to="/" />}
+      />
       {userType === "Freelancer" && (
         <Route path="/create-profile/*" element={<CreateProfile />} />
       )}

@@ -1,6 +1,9 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
-import User from "../models/user";
+import { AppDataSource } from "../data-source";
 import { Request, Response, NextFunction } from "express";
+import { User } from "../entities/user.entity";
+
+const userRepository = AppDataSource.getRepository(User);
 
 export interface AuthenticatedRequest extends Request {
   user?: any;
@@ -22,12 +25,12 @@ export const requireAuth = async (
   const token = authorization.split(" ")[1];
 
   try {
-    const { _id } = jwt.verify(
+    const { id } = jwt.verify(
       token,
       process.env.ACCESS_TOKEN_SECRET as string
     ) as JwtPayload;
 
-    req.user = await User.findOne({ _id });
+    req.user = await userRepository.findOne({ where: { id } });
     next();
   } catch (error) {
     //console.log(error)

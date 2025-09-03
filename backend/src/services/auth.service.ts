@@ -17,7 +17,7 @@ const freelancerRepository = AppDataSource.getRepository(Freelancer);
 export const loginService = async (email: string, password: string) => {
   const user = await userRepository.findOne({
     where: { email },
-    select: ["id", "email", "password"],
+    select: ["id", "email", "password", "verified"],
   });
 
   if (!user) {
@@ -37,7 +37,12 @@ export const loginService = async (email: string, password: string) => {
   const userType = isClient ? "Client" : "Freelancer";
 
   const token = createToken(
-    { id: user.id, userType: userType },
+    {
+      id: user.id,
+      userType: userType,
+      email: user.email,
+      verified: user.verified,
+    },
     "15m",
     process.env.ACCESS_TOKEN_SECRET as string
   );
@@ -74,7 +79,12 @@ export const signUpService = async (dto: CreateUserDto) => {
   const savedUser = await userRepository.save(user);
 
   const token = createToken(
-    { id: savedUser.id, userType: dto.userType },
+    {
+      id: savedUser.id,
+      userType: dto.userType,
+      email: dto.email,
+      verified: savedUser.verified,
+    },
     "15m",
     process.env.ACCESS_TOKEN_SECRET as string
   );

@@ -2,8 +2,10 @@ import { jwtDecode } from "jwt-decode";
 import { useAuthContext } from "../context/AuthContext";
 
 interface DecodedToken {
-  _id: number;
+  id: number;
   userType: string;
+  email: string;
+  verified: boolean;
 }
 
 const useDecodedToken = () => {
@@ -13,7 +15,7 @@ const useDecodedToken = () => {
 
   if (token) {
     try {
-      const decodedToken = jwtDecode(token) as DecodedToken;
+      const decodedToken: DecodedToken = jwtDecode(token);
       return decodedToken;
     } catch (error) {
       console.error("Error decoding token:", error);
