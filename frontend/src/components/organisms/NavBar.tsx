@@ -57,7 +57,7 @@ const NavBar: React.FC<{
       <AppBar
         position="fixed"
         sx={{
-          backgroundColor: "transparent",
+          backgroundColor: "white",
           color: "black",
           boxShadow: "none",
           border: "none",

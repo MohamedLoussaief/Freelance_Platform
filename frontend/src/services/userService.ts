@@ -1,6 +1,6 @@
 import axios from "axios";
 import { User } from "../types/models/User";
-import { baseURL, get, update } from "../api/client";
+import { baseURL, get } from "../api/client";
 
 const signup = async (userData: User) => {
   try {
@@ -83,22 +83,4 @@ const logout = async () => {
   }
 };
 
-const fieldOfWork = async (service: string) => {
-  try {
-    const response = await update("/profile/work-field", { service });
-
-    return response;
-  } catch (error: any) {
-    throw error;
-  }
-};
-
-export {
-  signup,
-  fieldOfWork,
-  getUserData,
-  logout,
-  login,
-  emailSend,
-  verifyToken,
-};
+export { signup, getUserData, logout, login, emailSend, verifyToken };

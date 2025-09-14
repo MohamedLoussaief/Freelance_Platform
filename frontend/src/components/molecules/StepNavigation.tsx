@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Box, CircularProgress, LinearProgress } from "@mui/material";
-import { useNavigate, useLocation } from "react-router-dom"; 
-import Button from "../atoms/Button"; 
+import { useNavigate, useLocation } from "react-router-dom";
+import Button from "../atoms/Button";
 
-const StepNavigation: React.FC<{ action?: () => 
-  Promise<boolean | undefined> | true; 
-  isLoading?:boolean}> = ({ action, isLoading }) => {
-
+const StepNavigation: React.FC<{
+  action?: () => Promise<boolean | undefined> | true;
+  isLoading?: boolean;
+}> = ({ action, isLoading }) => {
   const navigate = useNavigate();
   const location = useLocation(); // Get current route
 
@@ -20,7 +20,7 @@ const StepNavigation: React.FC<{ action?: () =>
     "/create-profile/language",
     "/create-profile/bio",
     "/create-profile/hourly-rate",
-    "/"
+    "/",
   ];
   const totalSteps = steps.length;
 
@@ -70,7 +70,11 @@ const StepNavigation: React.FC<{ action?: () =>
 
       {/* Progress Bar */}
       <Box flexGrow={1} mx={2}>
-        <LinearProgress variant="determinate" value={progress} sx={{ height: 10 }} />
+        <LinearProgress
+          variant="determinate"
+          value={progress}
+          sx={{ height: 10 }}
+        />
       </Box>
 
       {/* Next Button */}
@@ -79,20 +83,18 @@ const StepNavigation: React.FC<{ action?: () =>
         variant="contained"
         color="success"
         onClick={async () => {
-          const success = action&&await action();
+          const success = action && (await action());
           if (success) {
             navigate(getNextPath());
           }
         }}
         sx={{ width: "200px" }}
       >
-        
         {isLoading ? (
-            <CircularProgress size={24} sx={{ color: "white" }} /> 
-          ) : (
-            "Next"
-          )}
-
+          <CircularProgress size={24} sx={{ color: "white" }} />
+        ) : (
+          "Next"
+        )}
       </Button>
     </Box>
   );

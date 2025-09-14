@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { verifyToken } from "../services/userService";
 import useDecodedToken from "../hooks/useDecodedToken";
+import { useRefreshToken } from "../hooks/useRefreshToken";
+import { useAuthContext } from "../context/AuthContext";
 
 const ActivateRedirect = () => {
   const { token } = useParams<{ token: string }>();
@@ -9,6 +11,9 @@ const ActivateRedirect = () => {
   const calledOnce = useRef(false);
   const decodedToken = useDecodedToken();
   const verified = decodedToken?.verified;
+  const { refreshToken } = useRefreshToken();
+  const { dispatch } = useAuthContext();
+
   useEffect(() => {
     if (verified) {
       navigate("/");
@@ -21,9 +26,13 @@ const ActivateRedirect = () => {
     const activate = async () => {
       try {
         await verifyToken("verify", token);
+        const jwt = await refreshToken();
+        if (jwt) {
+          dispatch({ type: "LOGIN", payload: { token: jwt } });
+        }
         navigate("/");
       } catch (error) {
-        console.error("Activation failed", error);
+        //console.error("Activation failed", error);
         navigate("/not-found");
       }
     };
