@@ -1,41 +1,44 @@
-import { Box, TextField, Typography } from "@mui/material";
+import { Box, CircularProgress, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import NavBar from "../../components/organisms/NavBar";
 import StepNavigation from "../../components/molecules/StepNavigation";
-import { update } from "../../api/client";
-import { useUser } from "../../context/UserContext";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { GET_FREELANCER_JOBTITLE } from "../../utils/queries/freelancerQueries";
+import { GetFreelancerResponse } from "../../utils/types/freelancerInterface";
+import { ADD_FREELANCER_JOBTITLE } from "../../utils/mutations/jobTitleMutations";
 
 const JobTitle: React.FC = () => {
-  const { userData, loading } = useUser();
   const [jobTitle, setJobTitle] = useState<string>("");
   const [error, setError] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const {
+    data,
+    loading: getLoading,
+    error: getError,
+  } = useQuery<GetFreelancerResponse>(GET_FREELANCER_JOBTITLE, {
+    fetchPolicy: "network-only",
+  });
 
   useEffect(() => {
-    if (!loading && userData?.skills) {
-      setJobTitle(userData?.jobTitle);
+    if (!getLoading && !getError && data?.freelancer.jobTitle) {
+      setJobTitle(data.freelancer.jobTitle);
     }
-  }, [loading, userData]);
+  }, [getLoading, data]);
+
+  const [addJobTitle, { error: addError, loading: addLoading }] = useMutation(
+    ADD_FREELANCER_JOBTITLE
+  );
 
   const handleSubmit = async () => {
-    setIsLoading(true);
-
     if (jobTitle.trim() === "") {
       setError("Please enter a job title.");
-      setIsLoading(false);
       return;
     }
 
     try {
-      const addJobTitle = await update("/profile/job-title", { jobTitle });
-
-      if (addJobTitle) {
-        return true;
-      }
+      await addJobTitle({ variables: { jobTitleInput: { jobTitle } } });
+      return true;
     } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
+      setError(error.message || "Something went wrong");
     }
   };
 
@@ -78,18 +81,24 @@ const JobTitle: React.FC = () => {
         </Typography>
 
         {/* TextField */}
-        <TextField
-          label="Job Title"
-          variant="outlined"
-          fullWidth
-          value={jobTitle}
-          onChange={(e) => setJobTitle(e.target.value)}
-          error={!!error}
-          helperText={error}
-        />
+        {!getLoading ? (
+          <TextField
+            label="Job Title"
+            variant="outlined"
+            fullWidth
+            value={jobTitle}
+            onChange={(e) => setJobTitle(e.target.value)}
+            error={!!error}
+            helperText={error}
+          />
+        ) : (
+          <div className="flex justify-center items-center h-10">
+            <CircularProgress size={40} sx={{ color: "blue" }} />
+          </div>
+        )}
       </Box>
 
-      <StepNavigation action={handleSubmit} isLoading={isLoading} />
+      <StepNavigation action={handleSubmit} isLoading={addLoading} />
     </Box>
   );
 };

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Card from "../../components/molecules/Card";
 import StepNavigation from "../../components/molecules/StepNavigation";
 import EducationPopup from "../../components/organisms/EducationPopup";
-import { remove } from "../../api/client";
+import axios from "axios";
 import { IEducation } from "../../types/models/User";
 import { useUser } from "../../context/UserContext";
 
@@ -20,7 +20,7 @@ const Experience: React.FC = () => {
   const removeEducation = async (id: string) => {
     setError("");
     try {
-      await remove(`/profile/delete-education/${id}`);
+      await axios.delete(`/profile/delete-education/${id}`);
       fetchUserData();
     } catch (error: any) {
       setError(error.message);

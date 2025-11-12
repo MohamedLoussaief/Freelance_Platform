@@ -3,6 +3,7 @@ import { EducationType } from "./education.type";
 import { ExperienceType } from "./experience.type";
 import { LanguageType } from "./language.type";
 import { SkillType } from "./skill.type";
+import { SubcategoryType } from "./subcategory.type";
 
 @ObjectType()
 export class FreelancerType {
@@ -12,8 +13,8 @@ export class FreelancerType {
   @Field(() => String, { nullable: true })
   bio?: string;
 
-  @Field(() => String, { nullable: true })
-  service?: string;
+  @Field(() => [SubcategoryType], { nullable: true })
+  subcategories?: SubcategoryType[];
 
   @Field(() => String, { nullable: true })
   jobTitle?: string;

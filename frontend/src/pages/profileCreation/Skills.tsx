@@ -1,6 +1,7 @@
 import {
   Box,
   Chip,
+  CircularProgress,
   FormHelperText,
   InputAdornment,
   TextField,
@@ -9,21 +10,38 @@ import {
 import StepNavigation from "../../components/molecules/StepNavigation";
 import NavBar from "../../components/organisms/NavBar";
 import { useEffect, useState } from "react";
-import { remove, update } from "../../api/client";
-import { useUser } from "../../context/UserContext";
+import { useMutation, useQuery } from "@apollo/client/react";
+import {
+  ADD_FREELANCER_SKILL,
+  DELETE_FREELANCER_SKILL,
+} from "../../utils/mutations/skillsMutations";
+import { GET_FREELANCER_SKILLS } from "../../utils/queries/freelancerQueries";
+import { GetFreelancerResponse } from "../../utils/types/freelancerInterface";
 
 const Skills: React.FC = () => {
-  const { userData, loading } = useUser();
   const [skills, setSkills] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>();
+
+  const [assignSkill, { error: assignError, loading }] =
+    useMutation(ADD_FREELANCER_SKILL);
+
+  const {
+    data,
+    loading: loading1,
+    error: error1,
+  } = useQuery<GetFreelancerResponse>(GET_FREELANCER_SKILLS, {
+    fetchPolicy: "network-only",
+  });
+
+  const [deleteFreelancerSkill, { loading: loading2, error: removeError }] =
+    useMutation(DELETE_FREELANCER_SKILL);
 
   useEffect(() => {
-    if (!loading && userData?.skills) {
-      setSkills(Array.isArray(userData.skills) ? userData.skills : []);
+    if (!loading1 && !error1 && data?.freelancer.skills) {
+      setSkills(data?.freelancer.skills.map((skill) => skill.name));
     }
-  }, [loading, userData]);
+  }, [loading1, data]);
 
   const addSkill = (newSkill: string) => {
     if (newSkill && !skills.includes(newSkill) && skills.length < 15) {
@@ -34,32 +52,30 @@ const Skills: React.FC = () => {
 
   const removeSkill = async (skillToRemove: string) => {
     try {
-      await remove(`/profile/delete-skills/${skillToRemove}`);
+      await deleteFreelancerSkill({
+        variables: {
+          skillName: skillToRemove,
+        },
+      });
       setSkills(skills.filter((skill) => skill !== skillToRemove));
     } catch (error: any) {
-      setError(error.message);
+      setError(error.message || "Something went wrong");
     }
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true);
-
     if (skills.length === 0) {
       setError("Please add skills");
-      setIsLoading(false);
       return;
     }
 
     try {
-      const addSkills = await update("/profile/add-skills", { skills });
-
-      if (addSkills) {
-        return true;
-      }
+      await assignSkill({
+        variables: { skillsInput: skills.map((name) => ({ name })) },
+      });
+      return true;
     } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
+      setError(error.message || "Something went wrong");
     }
   };
 
@@ -97,61 +113,66 @@ const Skills: React.FC = () => {
         >
           Why choosing carefully matters
         </Typography>
-
         <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
           Your skills
         </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: 1,
-            border: "1px solid #ccc",
-            borderRadius: 1,
-            padding: 1,
-          }}
-        >
-          {/* Render Chips */}
-          {skills.map((skill, index) => (
-            <Chip
-              key={index}
-              label={skill}
-              onDelete={() => removeSkill(skill)}
-              color="primary"
-              variant="outlined"
-            />
-          ))}
-
-          {/* Input for adding skills */}
-          <TextField
-            variant="standard"
-            placeholder={skills.length < 15 ? "Enter skills here" : ""}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addSkill(inputValue.trim());
-              }
-            }}
-            InputProps={{
-              disableUnderline: true,
-              endAdornment: (
-                <InputAdornment position="end">
-                  {skills.length}/15
-                </InputAdornment>
-              ),
-            }}
+        {!loading1 ? (
+          <Box
             sx={{
-              flex: 1,
-              minWidth: "120px",
-              "& .MuiInputBase-input": {
-                padding: "4px",
-              },
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 1,
+              border: "1px solid #ccc",
+              borderRadius: 1,
+              padding: 1,
             }}
-          />
-        </Box>
+          >
+            {/* Render Chips */}
+            {skills.map((skill, index) => (
+              <Chip
+                key={index}
+                label={skill}
+                onDelete={!loading2 ? () => removeSkill(skill) : undefined}
+                color="primary"
+                variant="outlined"
+              />
+            ))}
+
+            {/* Input for adding skills */}
+            <TextField
+              variant="standard"
+              placeholder={skills.length < 15 ? "Enter skills here" : ""}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addSkill(inputValue.trim());
+                }
+              }}
+              InputProps={{
+                disableUnderline: true,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    {skills.length}/15
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                flex: 1,
+                minWidth: "120px",
+                "& .MuiInputBase-input": {
+                  padding: "4px",
+                },
+              }}
+            />
+          </Box>
+        ) : (
+          <div className="flex justify-center items-center h-10">
+            <CircularProgress size={40} sx={{ color: "blue" }} />
+          </div>
+        )}{" "}
         <Typography
           variant="caption"
           color={skills.length === 15 ? "error" : "text.secondary"}
@@ -160,12 +181,14 @@ const Skills: React.FC = () => {
           Max 15 skills
         </Typography>
         {/* Error Message */}
-        {error && (
-          <FormHelperText sx={{ color: "red" }}>{error}</FormHelperText>
+        {(error || assignError || removeError) && (
+          <FormHelperText sx={{ color: "red" }}>
+            {error || assignError?.message || removeError?.message}
+          </FormHelperText>
         )}
       </Box>
 
-      <StepNavigation action={handleSubmit} isLoading={isLoading} />
+      <StepNavigation action={handleSubmit} isLoading={loading} />
     </Box>
   );
 };

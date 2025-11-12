@@ -1,11 +1,14 @@
 import { useState } from "react";
 import mail from "../assets/images/mail.png";
 import useDecodedToken from "../hooks/useDecodedToken";
-import { emailSend } from "../services/userService";
+import { emailSend } from "../api/userService";
 import { CircularProgress } from "@mui/material";
 import NavBar from "../components/organisms/NavBar";
+import { useAuthContext } from "../context/AuthContext";
 
 const VerifyEmail: React.FC = () => {
+  const { user } = useAuthContext();
+  const token = (user as { token: string })?.token;
   const decodedToken = useDecodedToken();
   const email = decodedToken?.email;
   const [resendStatus, setResendStatus] = useState<{
@@ -21,7 +24,7 @@ const VerifyEmail: React.FC = () => {
     setIsLoading(true);
     setResendStatus({ type: null, message: "" });
     try {
-      await emailSend(email as string, "verify");
+      await emailSend(email as string, "verify", token);
       setResendStatus({ type: "success", message: "Email sent successfully!" });
     } catch (error: any) {
       //console.error("Email sending failed:", error);

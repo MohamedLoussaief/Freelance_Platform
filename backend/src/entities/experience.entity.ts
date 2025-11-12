@@ -12,8 +12,8 @@ export class Experience {
   @Column()
   company!: string;
 
-  @Column()
-  currentlyWorking!: string;
+  @Column({ type: "boolean", default: false })
+  currentlyWorking!: boolean;
 
   @Column({ type: "timestamp" })
   startDate!: Date;
@@ -21,8 +21,8 @@ export class Experience {
   @Column({ type: "timestamp", nullable: true })
   endDate?: Date | null;
 
-  @Column()
-  description!: string;
+  @Column({ nullable: true })
+  description?: string;
 
   @ManyToOne(() => Freelancer, (freelancer) => freelancer.experienceList)
   freelancer!: Freelancer;

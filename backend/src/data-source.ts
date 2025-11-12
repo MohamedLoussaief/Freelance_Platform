@@ -7,6 +7,8 @@ import { Skill } from "./entities/skill.entity";
 import { Education } from "./entities/education.entity";
 import { Experience } from "./entities/experience.entity";
 import { Language } from "./entities/language.entity";
+import { Category } from "./entities/category.entity";
+import { Subcategory } from "./entities/subcategory.entity";
 
 dotenv.config();
 
@@ -19,7 +21,17 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME,
   synchronize: true,
   logging: false,
-  entities: [User, Freelancer, Client, Skill, Education, Experience, Language],
+  entities: [
+    User,
+    Freelancer,
+    Client,
+    Skill,
+    Education,
+    Experience,
+    Language,
+    Category,
+    Subcategory,
+  ],
   subscribers: [],
   migrations: [],
 });

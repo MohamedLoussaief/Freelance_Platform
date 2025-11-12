@@ -1,23 +1,56 @@
+import { In } from "typeorm";
 import { AppDataSource } from "../data-source";
 import { Education } from "../entities/education.entity";
 import { Experience } from "../entities/experience.entity";
 import { Freelancer } from "../entities/freelancer.entity";
 import { Language } from "../entities/language.entity";
 import { Skill } from "../entities/skill.entity";
+import { Subcategory } from "../entities/subcategory.entity";
 import { EducationInput } from "../graphql/inputs/education.input";
 import { ExperienceInput } from "../graphql/inputs/experience.input";
 import { LanguageInput } from "../graphql/inputs/language.input";
 import { SkillInput } from "../graphql/inputs/skill.input";
+import { SubcategoryInput } from "../graphql/inputs/subcategory.input";
 
 const freelancerRepository = AppDataSource.getRepository(Freelancer);
 const skillRepository = AppDataSource.getRepository(Skill);
 const languageRepository = AppDataSource.getRepository(Language);
 const educationRepository = AppDataSource.getRepository(Education);
 const experienceRepository = AppDataSource.getRepository(Experience);
+const subcategoryRepository = AppDataSource.getRepository(Subcategory);
+
+export const freelancerServices = async (
+  id: string,
+  data: SubcategoryInput[]
+) => {
+  const freelancer = await freelancerRepository.findOne({
+    where: { user: { id } },
+    relations: ["subcategories"],
+  });
+
+  if (!freelancer) {
+    throw new Error("Freelancer not found");
+  }
+
+  const subcategoryIds = data.map((sub) => sub.id);
+  const subcategories = await subcategoryRepository.find({
+    where: { id: In(subcategoryIds) },
+  });
+
+  const foundIds = new Set(subcategories.map((s) => s.id));
+  const missing = subcategoryIds.filter((id) => !foundIds.has(id));
+  if (missing.length > 0) {
+    throw new Error(`Some subcategories not found`);
+  }
+
+  freelancer.subcategories = subcategories;
+
+  await freelancerRepository.save(freelancer);
+};
 
 export const updateFreelancerInfo = async (
   id: string,
-  data: { service?: string; bio?: string; jobTitle?: string }
+  data: { bio?: string; jobTitle?: string }
 ) => {
   const freelancer = await freelancerRepository.update({ user: { id } }, data);
   if (freelancer.affected === 0) {
@@ -133,7 +166,13 @@ export const freelancerLanguage = async (id: string, data: LanguageInput) => {
 export const freelancerProfile = async (id: string) => {
   const freelancer = await freelancerRepository.findOne({
     where: { user: { id } },
-    relations: ["educationList", "experienceList", "skills", "languages"],
+    relations: [
+      "educationList",
+      "experienceList",
+      "skills",
+      "languages",
+      "subcategories",
+    ],
   });
 
   if (!freelancer) throw new Error("Freelancer not found");
@@ -188,7 +227,7 @@ export const deleteExperience = async (
   return true;
 };
 
-export const deleteSkill = async (userId: string, skillId: string) => {
+export const deleteSkill = async (userId: string, skillName: string) => {
   const freelancer = await freelancerRepository.findOne({
     where: { user: { id: userId } },
     relations: ["skills"],
@@ -198,7 +237,9 @@ export const deleteSkill = async (userId: string, skillId: string) => {
     throw new Error("Freelancer not found");
   }
 
-  freelancer.skills = freelancer.skills.filter((skill) => skill.id !== skillId);
+  freelancer.skills = freelancer.skills.filter(
+    (skill) => skill.name !== skillName
+  );
 
   await freelancerRepository.save(freelancer);
 };

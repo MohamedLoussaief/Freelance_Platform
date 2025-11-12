@@ -11,7 +11,7 @@ import NavBar from "../../components/organisms/NavBar";
 import StepNavigation from "../../components/molecules/StepNavigation";
 import { useEffect, useState } from "react";
 import Button from "../../components/atoms/Button";
-import { post, remove, update } from "../../api/client";
+import axios from "axios";
 import languagesList from "iso-language-codes";
 import { useUser } from "../../context/UserContext";
 
@@ -61,7 +61,7 @@ const Language: React.FC = () => {
 
       const updatedLanguage = updatedLanguages.find((lang) => lang._id === id);
       if (updatedLanguage) {
-        await update(`/profile/update-language/${id}`, updatedLanguage);
+        await axios.patch(`/profile/update-language/${id}`, updatedLanguage);
       }
     } else {
       setNewLanguages((prev) =>
@@ -80,7 +80,7 @@ const Language: React.FC = () => {
 
     if (isExistingLanguage) {
       try {
-        await remove(`/profile/delete-language/${id}`);
+        await axios.delete(`/profile/delete-language/${id}`);
         setExistingLanguages((prev) => prev.filter((lang) => lang._id !== id));
       } catch (error: any) {
         setError(error.message);
@@ -123,7 +123,7 @@ const Language: React.FC = () => {
 
     try {
       // Submit only new languages
-      const addLanguages = await post("/profile/add-languages", {
+      const addLanguages = await axios.post("/profile/add-languages", {
         languages: newLanguages,
       });
       if (addLanguages) {

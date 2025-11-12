@@ -2,7 +2,7 @@ import { Box, FormHelperText, TextField, Typography } from "@mui/material";
 import NavBar from "../../components/organisms/NavBar";
 import { useEffect, useState } from "react";
 import StepNavigation from "../../components/molecules/StepNavigation";
-import { update } from "../../api/client";
+import axios from "axios";
 import { useUser } from "../../context/UserContext";
 
 const Bio: React.FC = () => {
@@ -45,7 +45,7 @@ const Bio: React.FC = () => {
     }
 
     try {
-      const addbio = await update("/profile/bio", { bio });
+      const addbio = await axios.patch("/profile/bio", { bio });
 
       if (addbio) {
         return true;

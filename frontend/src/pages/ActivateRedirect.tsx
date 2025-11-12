@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { verifyToken } from "../services/userService";
+import { verifyToken } from "../api/userService";
 import useDecodedToken from "../hooks/useDecodedToken";
 import { useRefreshToken } from "../hooks/useRefreshToken";
 import { useAuthContext } from "../context/AuthContext";

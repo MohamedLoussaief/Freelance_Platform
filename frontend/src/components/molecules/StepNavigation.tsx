@@ -61,7 +61,9 @@ const StepNavigation: React.FC<{
         <Button
           variant="outlined"
           color="success"
-          onClick={() => navigate(getPrevPath())}
+          onClick={() => {
+            navigate(getPrevPath());
+          }}
           sx={{ width: "100px" }}
         >
           Back

@@ -1,7 +1,7 @@
 import { Box, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import NavBar from "../../components/organisms/NavBar";
-import { update } from "../../api/client";
+import axios from "axios";
 import StepNavigation from "../../components/molecules/StepNavigation";
 import { useUser } from "../../context/UserContext";
 
@@ -44,7 +44,7 @@ const HourlyRate: React.FC = () => {
     }
 
     try {
-      const addHourlyRate = await update("/profile/hourly-rate", {
+      const addHourlyRate = await axios.patch("/profile/hourly-rate", {
         hourlyRate,
       });
 

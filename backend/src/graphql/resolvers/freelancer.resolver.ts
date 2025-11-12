@@ -8,6 +8,7 @@ import {
   freelancerExperience,
   freelancerLanguage,
   freelancerProfile,
+  freelancerServices,
   freelancerSkills,
   updateFreelancerInfo,
 } from "../../services/freelancer.service";
@@ -18,13 +19,21 @@ import { ExperienceInput } from "../inputs/experience.input";
 import { SkillInput } from "../inputs/skill.input";
 import { LanguageInput } from "../inputs/language.input";
 import { FreelancerType } from "../types/freelancer.type";
+import { SubcategoryInput } from "../inputs/subcategory.input";
 
 @Resolver()
 export class FreelancerResolver {
   @Mutation(() => Boolean)
   @Authorized()
-  async service(@Arg("service") service: string, @Ctx() { user }: any) {
-    await updateFreelancerInfo(user.id, { service });
+  async service(
+    @Arg("servicesInput", () => [SubcategoryInput])
+    servicesInput: SubcategoryInput[],
+    @Ctx() { user }: any
+  ) {
+    if (servicesInput.length === 0) {
+      throw new Error("Please choose at least one service");
+    }
+    await freelancerServices(user.id, servicesInput);
     return true;
   }
 
@@ -71,6 +80,10 @@ export class FreelancerResolver {
     @Arg("skillsInput", () => [SkillInput]) skillsInput: SkillInput[],
     @Ctx() { user }: any
   ) {
+    if (skillsInput.length === 0) {
+      throw new Error("Freelancer must have at least one skill");
+    }
+
     await freelancerSkills(user.id, skillsInput);
     return true;
   }
@@ -115,9 +128,9 @@ export class FreelancerResolver {
   @Authorized()
   async deleteFreelancerSkill(
     @Ctx() { user }: any,
-    @Arg("skillId") skillId: string
+    @Arg("skillName") skillName: string
   ) {
-    await deleteSkill(user.id, skillId);
+    await deleteSkill(user.id, skillName);
     return true;
   }
 

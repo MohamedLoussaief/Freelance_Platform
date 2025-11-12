@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import express, { Application } from "express";
+import express from "express";
 import dotenv from "dotenv";
 import { AppDataSource } from "./data-source";
 import authRoutes from "./routes/auth";
@@ -10,6 +10,8 @@ import { ApolloServer } from "apollo-server-express";
 import { context } from "./graphql/context";
 import { buildSchema } from "type-graphql";
 import { FreelancerResolver } from "./graphql/resolvers/freelancer.resolver";
+import { seedCategories } from "./seeds/category.seed";
+import { CategoryResolver } from "./graphql/resolvers/category.resolver";
 
 const startServer = async () => {
   dotenv.config();
@@ -18,7 +20,6 @@ const startServer = async () => {
 
   app.use(express.json());
   app.use(cookieParser());
-
   app.use(cors({ origin: process.env.CLIENT, credentials: true }));
 
   // routes
@@ -27,9 +28,14 @@ const startServer = async () => {
   // error handler middleware
   app.use(errorHandler);
 
+  // Initialize TypeORM connection
+  await AppDataSource.initialize();
+
+  await seedCategories();
+
   // Create Schema
   const schema = await buildSchema({
-    resolvers: [FreelancerResolver],
+    resolvers: [FreelancerResolver, CategoryResolver],
     authChecker: ({ context }) => {
       return !!context.user;
     },
@@ -43,10 +49,14 @@ const startServer = async () => {
   });
 
   await server.start();
-  server.applyMiddleware({ app: app as any, path: "/graphql" });
-
-  // Initialize TypeORM connection
-  await AppDataSource.initialize();
+  server.applyMiddleware({
+    app: app as any,
+    path: "/graphql",
+    cors: {
+      origin: process.env.CLIENT,
+      credentials: true,
+    },
+  });
 
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {

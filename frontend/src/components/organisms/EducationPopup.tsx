@@ -12,7 +12,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { post, update } from "../../api/client";
+import axios from "axios";
 import { IEducation } from "../../types/models/User";
 
 // Refined Zod schema for validation
@@ -36,7 +36,10 @@ const educationSchema = z
     endYear: z
       .string()
       .optional()
-      .refine((val) => !val || !isNaN(Number(val)), "End year must be a valid number"),
+      .refine(
+        (val) => !val || !isNaN(Number(val)),
+        "End year must be a valid number"
+      ),
   })
   .superRefine((data, ctx) => {
     if (data.endYear && Number(data.endYear) < Number(data.startYear)) {
@@ -54,11 +57,17 @@ interface EducationPopupProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
-  action:"update"|"add";
-  data?:IEducation;
+  action: "update" | "add";
+  data?: IEducation;
 }
 
-const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose, onSave, action, data }) => {
+const EducationPopup: React.FC<EducationPopupProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  action,
+  data,
+}) => {
   const {
     register,
     handleSubmit,
@@ -88,7 +97,7 @@ const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose, onSave
         degree: data.degree,
         field: data.field,
         startYear: String(data.startYear),
-        endYear: data.endYear?String(data.endYear):"",
+        endYear: data.endYear ? String(data.endYear) : "",
       });
     } else if (!isOpen) {
       reset({
@@ -97,27 +106,26 @@ const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose, onSave
         field: "",
         startYear: "",
         endYear: "",
-      })
+      });
     }
-    
   }, [isOpen, action, data, reset]);
 
   const onSubmit = async (formData: EducationFormData) => {
     setIsLoading(true);
     setError("");
-    try{
-       if(action==="add"){
-        await post("/profile/add-education", {education:formData}) 
-       }else if(action === "update" && data?._id){
-        await update(`/profile/update-education/${data._id}`, formData)
-       }
-       onSave();
-       onClose();
-     }catch(error:any){
+    try {
+      if (action === "add") {
+        await axios.post("/profile/add-education", { education: formData });
+      } else if (action === "update" && data?._id) {
+        await axios.patch(`/profile/update-education/${data._id}`, formData);
+      }
+      onSave();
+      onClose();
+    } catch (error: any) {
       setError(error.message);
-     }finally{
+    } finally {
       setIsLoading(false);
-     }   
+    }
   };
 
   return (
@@ -168,7 +176,9 @@ const EducationPopup: React.FC<EducationPopupProps> = ({ isOpen, onClose, onSave
           helperText={errors.endYear?.message}
           value={endYear || ""}
         />
-        {error && <FormHelperText sx={{ color: "red" }}>{error}</FormHelperText>}
+        {error && (
+          <FormHelperText sx={{ color: "red" }}>{error}</FormHelperText>
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="secondary">

@@ -13,6 +13,7 @@ import { Skill } from "./skill.entity";
 import { Language } from "./language.entity";
 import { Education } from "./education.entity";
 import { Experience } from "./experience.entity";
+import { Subcategory } from "./subcategory.entity";
 
 @Entity()
 export class Freelancer {
@@ -23,10 +24,13 @@ export class Freelancer {
   bio?: string;
 
   @Column({ nullable: true })
-  service?: string;
-
-  @Column({ nullable: true })
   jobTitle?: string;
+
+  @ManyToMany(() => Subcategory, (subcategory) => subcategory.freelancers, {
+    cascade: true,
+  })
+  @JoinTable()
+  subcategories!: Subcategory[];
 
   @OneToOne(() => User, { cascade: true })
   @JoinColumn()

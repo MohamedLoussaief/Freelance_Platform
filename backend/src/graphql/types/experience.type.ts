@@ -11,8 +11,8 @@ export class ExperienceType {
   @Field(() => String)
   company!: string;
 
-  @Field(() => String)
-  currentlyWorking!: string;
+  @Field(() => Boolean)
+  currentlyWorking!: boolean;
 
   @Field(() => Date)
   startDate!: Date;
@@ -20,6 +20,6 @@ export class ExperienceType {
   @Field(() => Date, { nullable: true })
   endDate?: Date;
 
-  @Field(() => String)
-  description!: string;
+  @Field(() => String, { nullable: true })
+  description?: string;
 }

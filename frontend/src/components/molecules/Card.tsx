@@ -5,18 +5,21 @@ import { format } from "date-fns";
 import { IconButton } from "@mui/material";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { IEducation, IExperience } from "../../types/models/User";
+import { IEducation } from "../../types/models/User";
+import { Experience } from "../../utils/types/experienceInterface";
 
-const Card: React.FC<{ experience?:IExperience; education?: any,
-   removeExp?:(id: string) => Promise<void>, 
-   removeEdu?:(id: string)=>Promise<void>,
-   expId?:string,
-   eduId?:string,
-   setExp?:Dispatch<SetStateAction<IExperience | undefined>>,
-   setEdu?:Dispatch<SetStateAction<IEducation | undefined>>,
-   setAction?:Dispatch<SetStateAction<"update"|"add">>,
-   openDialog?:() => void 
-  }> = ({
+const Card: React.FC<{
+  experience?: Experience;
+  education?: any;
+  removeExp?: (id: string) => Promise<void>;
+  removeEdu?: (id: string) => Promise<void>;
+  expId?: string;
+  eduId?: string;
+  setExp?: Dispatch<SetStateAction<Experience | undefined>>;
+  setEdu?: Dispatch<SetStateAction<IEducation | undefined>>;
+  setAction?: Dispatch<SetStateAction<"update" | "add">>;
+  openDialog?: () => void;
+}> = ({
   experience,
   education,
   removeExp,
@@ -26,7 +29,7 @@ const Card: React.FC<{ experience?:IExperience; education?: any,
   setExp,
   setEdu,
   setAction,
-  openDialog
+  openDialog,
 }) => {
   const formatDate = (dateString: string): string => {
     return format(new Date(dateString), "MMMM yyyy");
@@ -41,15 +44,13 @@ const Card: React.FC<{ experience?:IExperience; education?: any,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        width: "300px", 
+        width: "300px",
         backgroundColor: "#fff",
         boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-        flexShrink: 0, 
-        position:"relative"
+        flexShrink: 0,
+        position: "relative",
       }}
     >
-
-
       {/* Edit and Delete Icons */}
       <Box
         sx={{
@@ -57,29 +58,33 @@ const Card: React.FC<{ experience?:IExperience; education?: any,
           top: "8px",
           right: "8px",
           display: "flex",
-          flexDirection:"column",
+          flexDirection: "column",
           gap: "8px",
         }}
       >
         <IconButton
           size="small"
           color="primary"
-          onClick={() =>{setExp&&setExp(experience);setEdu&&setEdu(education)
-            setAction&&setAction("update");openDialog&&openDialog();} }
+          onClick={() => {
+            setExp && setExp(experience);
+            setEdu && setEdu(education);
+            setAction && setAction("update");
+            openDialog && openDialog();
+          }}
         >
           <EditOutlinedIcon />
         </IconButton>
         <IconButton
           size="small"
           color="primary"
-          onClick={()=>{(expId&&removeExp)&&removeExp(expId);(eduId&&removeEdu)&&removeEdu(eduId)}}
+          onClick={() => {
+            expId && removeExp && removeExp(expId);
+            eduId && removeEdu && removeEdu(eduId);
+          }}
         >
           <DeleteOutlineIcon />
         </IconButton>
       </Box>
-
-
-
 
       <Box
         sx={{
@@ -97,42 +102,62 @@ const Card: React.FC<{ experience?:IExperience; education?: any,
           📁
         </Typography>
       </Box>
-      <Typography variant="h6" sx={{ fontWeight: "bold", 
-        marginBottom: "4px", 
-        width: "50%", 
-        whiteSpace: "nowrap", 
-        overflow: "hidden", 
-        textOverflow: "ellipsis", 
-        textAlign: "center",
-        }}>
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: "bold",
+          marginBottom: "4px",
+          width: "50%",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          textAlign: "center",
+        }}
+      >
         {experience?.jobTitle} {education?.university}
       </Typography>
 
+      {experience && (
+        <>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
+              marginBottom: "8px",
+              width: "100%",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              textAlign: "center",
+            }}
+          >
+            {experience?.company} {"  "} | {"  "}
+            {experience?.startDate && formatDate(experience.startDate)} {"  "}
+            {experience?.endDate && `- ${formatDate(experience.endDate)}`}
+            {"  "}
+          </Typography>
+        </>
+      )}
 
-      {experience&&<><Typography variant="body2" color="text.secondary" sx={{ marginBottom: "8px",
-                width: "100%", 
-                overflow: "hidden", 
-                textOverflow: "ellipsis", 
-                textAlign: "center"
-       }}>
-        {experience?.company} {"  "} | {"  "}
-        {experience?.startDate && formatDate(experience.startDate)} {"  "} 
-        {experience?.endDate && `- ${formatDate(experience.endDate)}`}{"  "} 
-      </Typography></>}
+      {education && (
+        <>
+          <Typography>
+            {education?.degree} {"  "} | {"  "} {education?.startYear}{" "}
+            {education?.endYear && `- ${education?.endYear}`}
+          </Typography>
+        </>
+      )}
 
-
-      {education&&<><Typography>
-       {education?.degree} {"  "} | {"  "} {education?.startYear}  {education?.endYear&&`- ${education?.endYear}`}
-      </Typography></>}
-      
-
-      <Typography variant="body2" color="text.secondary" sx={{
-        width: "100%", 
-        whiteSpace: "nowrap", 
-        overflow: "hidden", 
-        textOverflow: "ellipsis", 
-        textAlign: "center",
-      }}>
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{
+          width: "100%",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          textAlign: "center",
+        }}
+      >
         {experience?.description} {education?.field}
       </Typography>
     </Box>

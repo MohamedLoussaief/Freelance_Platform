@@ -3,14 +3,15 @@ import { EducationInput } from "./education.input";
 import { ExperienceInput } from "./experience.input";
 import { SkillInput } from "./skill.input";
 import { LanguageInput } from "./language.input";
+import { SubcategoryInput } from "./subcategory.input";
 
 @InputType()
 export class FreelancerInput {
   @Field()
   bio!: string;
 
-  @Field()
-  service!: string;
+  @Field(() => [SubcategoryInput], { nullable: true })
+  subcategories?: SubcategoryInput[];
 
   @Field()
   jobTitle!: string;

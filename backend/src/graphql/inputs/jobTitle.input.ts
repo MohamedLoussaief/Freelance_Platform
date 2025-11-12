@@ -5,7 +5,7 @@ import { Matches, Length, IsNotEmpty } from "class-validator";
 export class JobTitleInput {
   @Field()
   @IsNotEmpty({ message: "JobTitle must not be empty" })
-  @Matches(/^[A-Za-z\s]+$/, {
+  @Matches(/^[A-Za-z0-9\s\/&\-]+$/, {
     message: "Job title must contain only letters and spaces",
   })
   @Length(2, 100, {

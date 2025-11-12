@@ -6,6 +6,7 @@ import {
   useContext,
 } from "react";
 import { useRefreshToken } from "../hooks/useRefreshToken";
+import { setAuthToken } from "../utils/authToken";
 
 interface AuthState {
   user: null | object | undefined;
@@ -33,11 +34,15 @@ export const authReducer = (
 ): AuthState => {
   switch (action.type) {
     case "LOGIN":
+      if (action.payload?.token) {
+        setAuthToken(action.payload.token);
+      }
       return {
         user: action.payload?.token ? { token: action.payload.token } : null,
         loading: false,
       };
     case "LOGOUT":
+      setAuthToken("");
       return { user: null, loading: false };
     default:
       return state;

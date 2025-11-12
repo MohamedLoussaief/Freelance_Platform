@@ -14,7 +14,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { getNames } from "country-list";
-import { emailSend, signup } from "../../services/userService";
+import { emailSend, signup } from "../../api/userService";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../context/AuthContext";
 

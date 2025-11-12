@@ -16,8 +16,8 @@ export class ExperienceInput {
   @IsNotEmpty({ message: "Company name is required" })
   company!: string;
 
-  @Field()
-  currentlyWorking!: string;
+  @Field(() => Boolean)
+  currentlyWorking!: boolean;
 
   @Field()
   @Matches(DATE_REGEX, { message: "Start date must be in YYYY-MM-DD format" })
@@ -27,7 +27,7 @@ export class ExperienceInput {
   @Matches(DATE_REGEX, { message: "End date must be in YYYY-MM-DD format" })
   endDate?: string;
 
-  @Field()
-  @IsNotEmpty({ message: "Description is required" })
-  description!: string;
+  @Field({ nullable: true })
+  @IsNotEmpty()
+  description?: string;
 }

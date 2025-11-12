@@ -1,27 +1,45 @@
-import { Box, FormHelperText, Typography } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  FormHelperText,
+  Typography,
+} from "@mui/material";
 import NavBar from "../../components/organisms/NavBar";
 import StepNavigation from "../../components/molecules/StepNavigation";
 import { useState } from "react";
 import ExperiencePopup from "../../components/organisms/ExperiencePopup";
 import Card from "../../components/molecules/Card";
-import { remove } from "../../api/client";
-import { IExperience } from "../../types/models/User";
-import { useUser } from "../../context/UserContext";
+import axios from "axios";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { GetFreelancerResponse } from "../../utils/types/freelancerInterface";
+import { GET_FREELANCER_EXPERIENCE } from "../../utils/queries/freelancerQueries";
+import { Experience } from "../../utils/types/experienceInterface";
+import { DELETE_FREELANCER_EXPERIENCE } from "../../utils/mutations/experienceMutations";
 
-const Experience: React.FC = () => {
-  const { userData, fetchUserData, loading } = useUser();
+const ExperiencePage: React.FC = () => {
   const [action, setAction] = useState<"update" | "add">("add");
-  const [exp, setExp] = useState<IExperience>();
+  const [exp, setExp] = useState<Experience>();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const handleOpenDialog = () => setIsDialogOpen(true);
   const handleCloseDialog = () => setIsDialogOpen(false);
   const [error, setError] = useState<string>("");
 
+  const {
+    data,
+    loading: getLoading,
+    refetch,
+  } = useQuery<GetFreelancerResponse>(GET_FREELANCER_EXPERIENCE, {
+    fetchPolicy: "network-only",
+  });
+
+  const [deleteExperience, { loading: deleteLoading }] = useMutation(
+    DELETE_FREELANCER_EXPERIENCE
+  );
+
   const removeExperience = async (id: string) => {
     setError("");
     try {
-      await remove(`/profile/delete-experience/${id}`);
-      fetchUserData();
+      await deleteExperience({ variables: { experienceId: id } });
     } catch (error: any) {
       setError(error.message);
     }
@@ -107,15 +125,17 @@ const Experience: React.FC = () => {
             </Box>
 
             {/* Experience Cards */}
-            {loading ? (
-              <></>
+            {getLoading ? (
+              <div className="flex justify-center items-center h-28">
+                <CircularProgress size={40} sx={{ color: "blue" }} />
+              </div>
             ) : (
-              userData.experience.map((exp: any) => (
+              data?.freelancer.experienceList.map((exp: any) => (
                 <Card
                   experience={exp}
-                  key={exp._id}
+                  key={exp.id}
                   removeExp={removeExperience}
-                  expId={exp._id}
+                  expId={exp.id}
                   setExp={setExp}
                   setAction={setAction}
                   openDialog={handleOpenDialog}
@@ -134,7 +154,7 @@ const Experience: React.FC = () => {
         <ExperiencePopup
           isOpen={isDialogOpen}
           onClose={handleCloseDialog}
-          onSave={fetchUserData}
+          onSave={refetch}
           action={action}
           data={exp}
         />
@@ -149,4 +169,4 @@ const Experience: React.FC = () => {
   );
 };
 
-export default Experience;
+export default ExperiencePage;

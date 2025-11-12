@@ -10,7 +10,7 @@ import { UserType } from "../../types/models/User";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../context/AuthContext";
 import { IconButton, Menu, MenuItem } from "@mui/material";
-import { logout } from "../../services/userService";
+import { logout } from "../../api/userService";
 
 const NavBar: React.FC<{
   selectedRole?: UserType | undefined;

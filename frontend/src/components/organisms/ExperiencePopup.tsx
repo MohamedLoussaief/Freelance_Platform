@@ -14,30 +14,33 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { post, update } from "../../api/client";
-import { IExperience } from "../../types/models/User";
+import axios from "axios";
+import { Experience } from "../../utils/types/experienceInterface";
+import { useMutation } from "@apollo/client/react";
+import { ADD_FREELANCER_EXPERIENCE } from "../../utils/mutations/experienceMutations";
 
-// Zod schema for validation 
-const experienceSchema = z.object({
-  jobTitle: z.string().min(1, "Job title is required"),
-  company: z.string().min(1, "Company is required"),
-  currentlyWorking: z.boolean(),
-  startDate: z.string().nonempty("Start date is required"),
-  endDate: z.string().optional(),
-  description: z.string().optional(),
-}).refine((data) => data.currentlyWorking || (data.endDate), 
-{
-  message: "End date is required",
-  path: ["endDate"],
-})
-.refine(
-  (data) =>
-    data.currentlyWorking || (data.endDate && data.startDate < data.endDate),
-  {
-    message: "End date must be after start date",
+// Zod schema for validation
+const experienceSchema = z
+  .object({
+    jobTitle: z.string().min(1, "Job title is required"),
+    company: z.string().min(1, "Company is required"),
+    currentlyWorking: z.boolean(),
+    startDate: z.string().nonempty("Start date is required"),
+    endDate: z.string().optional(),
+    description: z.string().optional(),
+  })
+  .refine((data) => data.currentlyWorking || data.endDate, {
+    message: "End date is required",
     path: ["endDate"],
-  }
-);
+  })
+  .refine(
+    (data) =>
+      data.currentlyWorking || (data.endDate && data.startDate < data.endDate),
+    {
+      message: "End date must be after start date",
+      path: ["endDate"],
+    }
+  );
 
 type ExperienceFormData = z.infer<typeof experienceSchema>;
 
@@ -45,8 +48,8 @@ interface ExperiencePopupProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
-  action:"update"|"add";
-  data?:IExperience;
+  action: "update" | "add";
+  data?: Experience;
 }
 
 const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
@@ -54,7 +57,7 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
   onClose,
   onSave,
   action,
-  data
+  data,
 }) => {
   const {
     register,
@@ -75,7 +78,6 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
     },
   });
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const currentlyWorking = watch("currentlyWorking");
   const startDate = watch("startDate");
@@ -103,36 +105,36 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
     }
   }, [isOpen, action, data, reset]);
 
-
+  const [addExperience, { error: addError, loading: addLoading }] = useMutation(
+    ADD_FREELANCER_EXPERIENCE
+  );
 
   const onSubmit = async (formData: ExperienceFormData) => {
-    setIsLoading(true);
     setError("");
-    
+
     // Convert string dates to Date objects before submitting
     const payload = {
       ...formData,
-      startDate: new Date(formData.startDate),
-      endDate: formData.endDate ? new Date(formData.endDate) : undefined,
+      endDate: formData.endDate ? endDate : undefined,
+      description: formData.description ? formData.description : undefined,
     };
 
     try {
       if (action === "add") {
-        await post("/profile/add-experience", { experience: [payload] });
-      } else if (action === "update" && data?._id) {
-        await update(`/profile/update-experience/${data._id}`, payload);
+        await addExperience({ variables: { experienceInput: payload } });
+      } else if (action === "update" && data?.id) {
+        await axios.patch(`/profile/update-experience/${data.id}`, formData);
       }
       onSave();
       onClose();
     } catch (error: any) {
       setError(error.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-
-  const handleCurrentlyWorkingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCurrentlyWorkingChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const isChecked = e.target.checked;
     setValue("currentlyWorking", isChecked);
 
@@ -143,7 +145,15 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={isOpen}
+      onClose={() => {
+        onClose();
+        setError("");
+      }}
+      maxWidth="sm"
+      fullWidth
+    >
       <DialogTitle>Experience</DialogTitle>
       <DialogContent dividers>
         <TextField
@@ -172,7 +182,7 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
           }
           label="I currently work here"
         />
-        
+
         <TextField
           {...register("startDate")}
           label="Start Date"
@@ -199,7 +209,7 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
             InputLabelProps={{ shrink: true }}
             value={endDate || ""}
             inputProps={{
-              max: new Date().toISOString().split("T")[0], 
+              max: new Date().toISOString().split("T")[0],
             }}
           />
         )}
@@ -214,20 +224,28 @@ const ExperiencePopup: React.FC<ExperiencePopupProps> = ({
           error={!!errors.description}
           helperText={errors.description?.message}
         />
-        {error && <FormHelperText sx={{ color: "red" }}>{error}</FormHelperText>}
+        {error && (
+          <FormHelperText sx={{ color: "red" }}>{error}</FormHelperText>
+        )}
       </DialogContent>
-      
+
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button
+          onClick={() => {
+            onClose();
+            setError("");
+          }}
+          color="secondary"
+        >
           Cancel
         </Button>
         <Button
           onClick={handleSubmit(onSubmit)}
-          disabled={isLoading}
+          disabled={addLoading}
           color="primary"
           variant="contained"
         >
-          {isLoading ? (
+          {addLoading ? (
             <CircularProgress size={24} sx={{ color: "white" }} />
           ) : (
             "Save"
